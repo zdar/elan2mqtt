@@ -10,6 +10,7 @@ Works with Home Assistant (supports autodiscovery) and other MQTT compatible hom
 # Requirements
 - eLan RF Gateway https://www.elkoep.com/smart-rf-box-elan-rf-003
 - python
+Note: all connected devices must be defined on eLan
 
 # Hass.IO
 Copy elan2mqtt directory into Hass addons directory 
