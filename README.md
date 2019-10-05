@@ -5,7 +5,7 @@ Can be used as:
 - Hass.io add-on
 - Standalone eLan (iNELS RF) to MQTT gateway
 
-Works with Home Assistant (supports autodiscovery) and other MQTT home automation systems (OpenHAB,...)
+Works with Home Assistant (supports autodiscovery) and other MQTT compatible home automation systems (OpenHAB,...)
 
 # Requirements
 - eLan RF Gateway https://www.elkoep.com/smart-rf-box-elan-rf-003
