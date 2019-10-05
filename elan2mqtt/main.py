@@ -4,7 +4,7 @@
 #
 # This is eLAN to MQTT gateway
 #
-# In operates in signle monolitic loop which peridically:
+# It operates in signle monolitic loop which peridically:
 # - checks for MQTT messages and processes them
 # - checks for websocket messages and processes them
 # - periodically publishes status of all components
