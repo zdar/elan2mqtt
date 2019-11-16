@@ -4,7 +4,7 @@
 #
 # This is eLAN to MQTT gateway
 #
-# In operates in signle monolitic loop which peridically:
+# It operates in signle monolitic loop which peridically:
 # - checks for MQTT messages and processes them
 # - checks for websocket messages and processes them
 # - periodically publishes status of all components
@@ -23,9 +23,6 @@
 ##########################################################################
 
 import argparse
-
-
-#import aiohttp_elan as aiohttp
 import aiohttp
 import asyncio
 import async_timeout
@@ -183,7 +180,6 @@ async def main():
             logger.error("Unexpected error:", sys.exc_info()[0])
 
     # setup mqtt (aiomqtt)
-
     c = MQTTClient()
     logger.info("Connecting to MQTT broker")
     logger.info(args.mqtt_broker)
@@ -271,10 +267,7 @@ async def main():
     pass
 
     logger.info("Connecting to websocket to get updates")
-    #websocket = await asyncws.connect(
-    #    'ws:' + args.elan_url.split(':')[1] + '/api/ws', timeout=.1)
     websocket = await session.ws_connect(args.elan_url + '/api/ws', timeout=.1)
-    #websocket = await ws_connect_2(session, url = (args.elan_url + '/api/ws'), timeout=.1)
     logger.info("Socket connected")
 
     i = 0
