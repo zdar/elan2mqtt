@@ -16,4 +16,4 @@ pip3 install -r requirements.txt
 echo "Starting gateway"
 echo ${ELAN_URL} ${MQTT_SERVER}
 
-python3 main.py ${ELAN_URL} ${MQTT_SERVER} -elan-user ${USERNAME} -elan-password ${PASSWORD} -log-level ${LOGLEVEL}
+python3 main_worker.py ${ELAN_URL} ${MQTT_SERVER} -elan-user ${USERNAME} -elan-password ${PASSWORD} -log-level ${LOGLEVEL} & python3 socket_listener.py ${ELAN_URL} ${MQTT_SERVER} -elan-user ${USERNAME} -elan-password ${PASSWORD} -log-level ${LOGLEVEL} 

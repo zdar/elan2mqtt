@@ -3,7 +3,7 @@ FROM $BUILD_FROM
 
 # Add env
 ENV LANG C.UTF-8
-ENV ELAN2MQTT_VERSION=1.1.0
+ENV ELAN2MQTT_VERSION=1.2.0
 ENV ARCHIVE=elan2mqtt-$ELAN2MQTT_VERSION
 
 # Install requirements for add-on
@@ -13,7 +13,8 @@ RUN mkdir /$ARCHIVE/aiohttp
 
 # Copy data for add-on
 COPY run.sh /$ARCHIVE/run.sh
-COPY main.py /$ARCHIVE/main.py
+COPY main_worker.py /$ARCHIVE/main_worker.py
+COPY socket_listener.py /$ARCHIVE/socket_listener.py
 COPY aiohttp/* /$ARCHIVE/aiohttp/
 COPY requirements.txt /$ARCHIVE/requirements.txt
 
