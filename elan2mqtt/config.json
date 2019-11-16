@@ -1,6 +1,6 @@
 {
   "name": "eLAN MQTT",
-  "version": "1",
+  "version": "1.1",
   "slug": "elan2mqtt",
   "description": "MQTT gateway for eLAN",
   "arch": ["armhf", "armv7", "aarch64", "amd64", "i386"],
@@ -8,7 +8,7 @@
   "boot": "auto",
   "options": {
     "eLanURL": "http://ip.address",
-    "MQTTserver": "mqtt://homeassistant:homeassistant@localhost",
+    "MQTTserver": "mqtt://username:password@ip.address",
     "username": "admin",
     "password": "elkoep",
     "log_level": "notice"

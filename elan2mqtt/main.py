@@ -4,7 +4,7 @@
 #
 # This is eLAN to MQTT gateway
 #
-# It operates in signle monolitic loop which peridically:
+# In operates in signle monolitic loop which peridically:
 # - checks for MQTT messages and processes them
 # - checks for websocket messages and processes them
 # - periodically publishes status of all components
@@ -24,9 +24,10 @@
 
 import argparse
 
+
+#import aiohttp_elan as aiohttp
 import aiohttp
 import asyncio
-import asyncws
 import async_timeout
 
 from hbmqtt.client import MQTTClient, ClientException
@@ -39,7 +40,6 @@ import time
 import hashlib
 
 logger = logging.getLogger(__name__)
-
 
 @asyncio.coroutine
 async def main():
@@ -191,7 +191,8 @@ async def main():
     logger.info("Connected to MQTT broker")
 
     # Connect to eLan and
-    session = aiohttp.ClientSession()
+    cookie_jar = aiohttp.CookieJar(unsafe=True)
+    session = aiohttp.ClientSession(cookie_jar=cookie_jar)
     # authentication to eLAN
     # from firmware v 3.0. the password is hashed
     # older firmwares work without authentication
@@ -200,21 +201,34 @@ async def main():
     'name': args.elan_user[0],
     'key': hash
     }
+
+    logger.info("Get main/login paget (to get cookies)")
+    # dirty check if we are authenticated and to get session
+    resp = await session.get(args.elan_url + '/', timeout=3)
+
     logger.info("Are we already authenticated? E.g. API check")
     # dirty check if we are authenticated and to get session
     resp = await session.get(args.elan_url + '/api', timeout=3)
-    # !!! check is not implemented yet !!!
 
-    # perfrom login
-    # it should result in new AuthID cookie
-    logger.info("Authenticating to eLAN")
-    resp = await session.post(args.elan_url + '/login',data=credentials)
+    not_logged = True
+
+    while not_logged:
+        if resp.status != 200:
+            # perfrom login
+            # it should result in new AuthID cookie
+            logger.info("Authenticating to eLAN")
+            resp = await session.post(args.elan_url + '/login',data=credentials)
+
 
     # Get list of devices
     # If we are not athenticated if will raise exception due to json
     # --> it triggers loop reset with new authenticatin attempt
-    logger.info("Getting eLan device list")
-    resp = await session.get(args.elan_url + '/api/devices', timeout=3)
+        logger.info("Getting eLan device list")
+        resp = await session.get(args.elan_url + '/api/devices', timeout=3)
+        print(resp.text)
+        if  resp.status == 200:
+            not_logged = False
+
     device_list = await resp.json()
 
     logger.info("Devices defined in eLan:\n" + str(device_list))
@@ -256,8 +270,12 @@ async def main():
 
     pass
 
-    websocket = await asyncws.connect(
-        'ws:' + args.elan_url.split(':')[1] + '/api/ws')
+    logger.info("Connecting to websocket to get updates")
+    #websocket = await asyncws.connect(
+    #    'ws:' + args.elan_url.split(':')[1] + '/api/ws', timeout=.1)
+    websocket = await session.ws_connect(args.elan_url + '/api/ws', timeout=.1)
+    #websocket = await ws_connect_2(session, url = (args.elan_url + '/api/ws'), timeout=.1)
+    logger.info("Socket connected")
 
     i = 0
     try:
@@ -304,8 +322,9 @@ async def main():
             # process status update announcement from eLan
             try:
                 # Waiting for WebSocket eLan message
-                with async_timeout.timeout(0.1):
-                    echo = await websocket.recv()
+                # with async_timeout.timeout(0.1):
+                #    echo = await websocket.recv()
+                    echo = await websocket.receive()
                     if echo is None:
                         pass
                         #print("Empty message?")
@@ -321,6 +340,8 @@ async def main():
         await c.disconnect()
     except ClientException as ce:
         logger.error("Client exception: %s" % ce)
+        time.sleep(5)
+
 
 if __name__ == '__main__':
     # parse arguments
@@ -366,7 +387,7 @@ if __name__ == '__main__':
         try:
             asyncio.get_event_loop().run_until_complete(main())
         except:
-            logger.error(
+            logger.exception(
                 "Something went wrong. But don't worry we will start over again."
             )
             logger.error("But at first take some break. Sleeping for 30 s")
