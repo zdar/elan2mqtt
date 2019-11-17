@@ -57,7 +57,7 @@ async def main():
         """Publish message to status topic. Topic syntax is: elan / mac / status """
         if mac in d:
             logger.info("Publishing discovery for " + d[mac]['url'])
-            if d[mac]['info']['device info']['type'] == 'light':
+            if 'light' in d[mac]['info']['device info']['type']:
                 logger.info(d[mac]['info']['device info'])
 
                 if 'on' in d[mac]['info']['primary actions']:
