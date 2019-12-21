@@ -63,19 +63,20 @@ async def main():
                 if 'on' in d[mac]['info']['primary actions']:
                     logger.info("Primary action of light is ON")
                     discovery = {
-                        'schema':
-                        'basic',
-                        'name':
-                        d[mac]['info']['device info']['label'],
+                        'schema': 'basic',
+                        'name': d[mac]['info']['device info']['label'],
                         'unique_id': ('eLan-' + mac),
-                        'command_topic':
-                        d[mac]['control_topic'],
-                        'state_topic':
-                        d[mac]['status_topic'],
-                        'payload_off':
-                        '{"on":false}',
-                        'payload_on':
-                        '{"on":true}',
+                        'device': {
+                            'name': d[mac]['info']['device info']['label'],
+                            'identifiers' : ('eLan-light-' + mac),
+                            'connections': [["mac",  mac]],
+                            'mf': 'Elko EP',
+                            'mdl': d[mac]['info']['device info']['product type']
+                        },
+                        'command_topic': d[mac]['control_topic'],
+                        'state_topic': d[mac]['status_topic'],
+                        'payload_off': '{"on":false}',
+                        'payload_on': '{"on":true}',
                         'state_value_template':
                         '{%- if value_json.on -%}{"on":true}{%- else -%}{"on":false}{%- endif -%}'
                     }
@@ -87,22 +88,24 @@ async def main():
                 if 'brightness' in d[mac]['info']['primary actions']:
                     logger.info("Primary action of light is BRIGHTNESS")
                     discovery = {
-                        'schema':
-                        'template',
-                        'name':
-                        d[mac]['info']['device info']['label'],
+                        'schema': 'template',
+                        'name': d[mac]['info']['device info']['label'],
                         'unique_id': ('eLan-' + mac),
-                        'state_topic':
-                        d[mac]['status_topic'],
-                        'command_topic':
-                        d[mac]['control_topic'],
+                        'device': {
+                            'name': d[mac]['info']['device info']['label'],
+                            'identifiers' : ('eLan-dimmer-' + mac),
+                            'connections': [["mac",  mac]],
+                            'mf': 'Elko EP',
+                            'mdl': d[mac]['info']['device info']['product type']
+                        },
+                        'state_topic': d[mac]['status_topic'],
+                        'command_topic': d[mac]['control_topic'],
                         'command_on_template':
                         '{%- if brightness is defined -%} {"brightness": {{ (brightness * '
                         + str(d[mac]['info']['actions info']['brightness']
                               ['max']) +
                         ' / 255 ) | int }} } {%- else -%} {"brightness": 100 } {%- endif -%}',
-                        'command_off_template':
-                        '{"brightness": 0 }',
+                        'command_off_template': '{"brightness": 0 }',
                         'state_template':
                         '{%- if value_json.brightness > 0 -%}on{%- else -%}off{%- endif -%}',
                         'brightness_template':
@@ -117,13 +120,20 @@ async def main():
 
             if d[mac]['info']['device info']['type'] == 'heating':
                 logger.info(d[mac]['info']['device info'])
+
                 discovery = {
                     'name': d[mac]['info']['device info']['label'] + '-IN',
                     'unique_id': ('eLan-' + mac + '-IN'),
+                    'device': {
+                        'name': d[mac]['info']['device info']['label'],
+                        'identifiers' : ('eLan-thermostat-' + mac),
+                        'connections': [["mac",  mac]],
+                        'mf': 'Elko EP',
+                        'mdl': d[mac]['info']['device info']['product type']
+                    },
                     'device_class': 'temperature',
                     'state_topic': d[mac]['status_topic'],
                     'value_template': '{{ value_json["temperature IN"] }}',
-#                    'command_topic': d[mac]['control_topic'],
                     'unit_of_measurement': '°C'
                 }
                 await c.publish('homeassistant/sensor/' + mac + '/IN/config',
@@ -134,10 +144,16 @@ async def main():
                 discovery = {
                     'name': d[mac]['info']['device info']['label'] + '-OUT',
                     'unique_id': ('eLan-' + mac + '-OUT'),
+                    'device': {
+                        'name': d[mac]['info']['device info']['label'],
+                        'identifiers' : ('eLan-thermostat-' + mac),
+                        'connections': [["mac",  mac]],
+                        'mf': 'Elko EP',
+                        'mdl': d[mac]['info']['device info']['product type']
+                    },
                     'state_topic': d[mac]['status_topic'],
                     'device_class': 'temperature',
                     'value_template': '{{ value_json["temperature OUT"] }}',
-#                    'command_topic': d[mac]['control_topic'],
                     'unit_of_measurement': '°C'
                 }
                 await c.publish('homeassistant/sensor/' + mac + '/OUT/config',
@@ -145,11 +161,21 @@ async def main():
 
                 logger.info("Discovery published for " + d[mac]['url'] + " " +
                             json.dumps(discovery))
-
+#
+# Note - needs to be converted to CLIMATE class
+#
                 discovery = {
                     'name': d[mac]['info']['device info']['label'] + '-ON',
                     'unique_id': ('eLan-' + mac + '-ON'),
+                    'device': {
+                        'name': d[mac]['info']['device info']['label'],
+                        'identifiers' : ('eLan-thermostat-' + mac),
+                        'connections': [["mac",  mac]],
+                        'mf': 'Elko EP',
+                        'mdl': d[mac]['info']['device info']['product type']
+                    },
                     'state_topic': d[mac]['status_topic'],
+#                    'device_class': 'heat',
                     'value_template':
                     '{%- if value_json.on -%}on{%- else -%}off{%- endif -%}'
 #                    'command_topic': d[mac]['control_topic']

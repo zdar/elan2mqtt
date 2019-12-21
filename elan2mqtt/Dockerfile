@@ -3,11 +3,12 @@ FROM $BUILD_FROM
 
 # Add env
 ENV LANG C.UTF-8
-ENV ELAN2MQTT_VERSION=1.2.0
+ENV ELAN2MQTT_VERSION=1.3.0
 ENV ARCHIVE=elan2mqtt-$ELAN2MQTT_VERSION
 
 # Install requirements for add-on
 RUN apk add --no-cache --update python3 jq
+RUN apk add --no-cache --update gcc
 RUN mkdir /$ARCHIVE
 RUN mkdir /$ARCHIVE/aiohttp
 
