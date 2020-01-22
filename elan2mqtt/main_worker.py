@@ -204,6 +204,41 @@ async def main():
         except:
             logger.error("Unexpected error:", sys.exc_info()[0])
 
+    async def login(name, password):
+        hash = hashlib.sha1(password).hexdigest()
+        credentials = {
+        'name': name,
+        'key': hash
+        }
+
+        logger.info("Get main/login paget (to get cookies)")
+        # dirty check if we are authenticated and to get session
+        resp = await session.get(args.elan_url + '/', timeout=3)
+
+        logger.info("Are we already authenticated? E.g. API check")
+        # dirty check if we are authenticated and to get session
+        resp = await session.get(args.elan_url + '/api', timeout=3)
+
+        not_logged = True
+
+        while not_logged:
+            if resp.status != 200:
+                # perfrom login
+                # it should result in new AuthID cookie
+                logger.info("Authenticating to eLAN")
+                resp = await session.post(args.elan_url + '/login',data=credentials)
+
+
+        # Get list of devices
+        # If we are not athenticated if will raise exception due to json
+        # --> it triggers loop reset with new authenticatin attempt
+            logger.info("Getting eLan device list")
+            resp = await session.get(args.elan_url + '/api/devices', timeout=3)
+            print(resp.text)
+            if  resp.status == 200:
+                not_logged = False
+
+
     # setup mqtt (aiomqtt)
     c = MQTTClient()
     logger.info("Connecting to MQTT broker")
@@ -217,39 +252,14 @@ async def main():
     # authentication to eLAN
     # from firmware v 3.0. the password is hashed
     # older firmwares work without authentication
-    hash = hashlib.sha1(str(args.elan_password[0]).encode('cp1250')).hexdigest()
-    credentials = {
-    'name': args.elan_user[0],
-    'key': hash
-    }
 
-    logger.info("Get main/login paget (to get cookies)")
-    # dirty check if we are authenticated and to get session
-    resp = await session.get(args.elan_url + '/', timeout=3)
-
-    logger.info("Are we already authenticated? E.g. API check")
-    # dirty check if we are authenticated and to get session
-    resp = await session.get(args.elan_url + '/api', timeout=3)
-
-    not_logged = True
-
-    while not_logged:
-        if resp.status != 200:
-            # perfrom login
-            # it should result in new AuthID cookie
-            logger.info("Authenticating to eLAN")
-            resp = await session.post(args.elan_url + '/login',data=credentials)
-
+    await login(args.elan_user[0],str(args.elan_password[0]).encode('cp1250'))
 
     # Get list of devices
     # If we are not athenticated if will raise exception due to json
     # --> it triggers loop reset with new authenticatin attempt
-        logger.info("Getting eLan device list")
-        resp = await session.get(args.elan_url + '/api/devices', timeout=3)
-        print(resp.text)
-        if  resp.status == 200:
-            not_logged = False
-
+    logger.info("Getting eLan device list")
+    resp = await session.get(args.elan_url + '/api/devices', timeout=3)
     device_list = await resp.json()
 
     logger.info("Devices defined in eLan:\n" + str(device_list))
@@ -293,11 +303,18 @@ async def main():
 
     i = 0
     try:
+        login_interval = 6 * 60 * 60  # interval between logins (to renew session) in s
         discovery_interval = 10 * 60  # interval between autodiscovery messages in s
         info_interval = 1 * 60  # interval between periodic status messages
+        last_login = time.time()
         last_discovery = time.time()
         last_info = time.time()
         while True:  # Main loop
+            # every once so often do login
+            if ((time.time() - last_login) > login_interval):
+                last_login = time.time()
+                await login(args.elan_user[0],str(args.elan_password[0]).encode('cp1250'))
+
             # every once so often publish status (just for sure)
             if ((time.time() - last_info) > info_interval):
                 try:
@@ -321,7 +338,7 @@ async def main():
             # process incomming MQTT commands
             try:
                 # Waiting for MQTT message
-                message = await c.deliver_message(timeout=0.1)
+                message = await c.deliver_message(timeout=0.5)
                 packet = message.publish_packet
                 i = i + 1
                 #print("Processing MQTT message %d:  %s => %s" %
