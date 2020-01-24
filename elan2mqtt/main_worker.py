@@ -272,7 +272,7 @@ async def main():
             mac = str(info['device info']['address'])
         else:
             mac = str(info['id'])
-            logger.error("There is no MAC for device " + device_list[device])
+            logger.error("There is no MAC for device " + str(device_list[device]))
             device_list[device]['info']['device info']['address'] = mac
 
         logger.info("Setting up " + device_list[device]['url'])
