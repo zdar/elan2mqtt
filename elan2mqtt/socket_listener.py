@@ -103,7 +103,12 @@ async def main():
         info = await resp.json()
         device_list[device]['info'] = info
 
-        mac = str(info['device info']['address'])
+        if "address" in info['device info']:
+            mac = str(info['device info']['address'])
+        else:
+            mac = str(info['id'])
+            logger.error("There is no MAC for device " + device_list[device])
+            device_list[device]['info']['device info']['address'] = mac
 
         u[device] = mac
 
