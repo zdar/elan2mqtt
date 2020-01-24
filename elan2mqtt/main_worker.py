@@ -41,7 +41,6 @@ logger = logging.getLogger(__name__)
 async def main():
     # placehloder for devices data
     d = {}
-    u = {}
     async def publish_status(mac):
         """Publish message to status topic. Topic syntax is: elan / mac / status """
         if mac in d:
@@ -269,9 +268,12 @@ async def main():
         info = await resp.json()
         device_list[device]['info'] = info
 
-        mac = str(info['device info']['address'])
-
-        u[device_list[device]['url']] = mac
+        if "address" in info['device info']:
+            mac = str(info['device info']['address'])
+        else:
+            mac = str(info['id'])
+            logger.error("There is no MAC for device " + device_list[device])
+            device_list[device]['info']['device info']['address'] = mac
 
         logger.info("Setting up " + device_list[device]['url'])
         #print("Setting up ", device_list[device]['url'], device_list[device])
