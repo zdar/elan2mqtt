@@ -13,8 +13,10 @@ Works with Home Assistant (supports autodiscovery) and other MQTT compatible hom
 
 Note: all connected devices must be defined on eLan
 
-# Hass.IO
-Copy elan2mqtt directory into Hass addons directory 
+# Hass.IO (Home Assistant)
+Manual - Copy elan2mqtt directory into Hass addons directory
+Automatic - Add https://github.com/zdar/elan2mqtt as a new repository and install
+
 
 # Standalone
 Use python to run main.py (check command line arguments)
