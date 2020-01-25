@@ -34,4 +34,4 @@ In ticke you have to provide:
 - example of device commands*
 and when possible home assistant MQTT sensor definition
 
-* these can be captured using google web browser. Open developer tools (F12), log in into elan, use your device. In network tab you will see messages passing between browser and elan. Attach those relevant to you device.
+(*) these can be captured using google web browser. Open developer tools (F12), log in into elan, use your device. In network tab you will see messages passing between browser and elan. Attach those relevant to you device.
