@@ -44,5 +44,5 @@ RFDA-11B | dimmed light | MQTT template dimmer light
 RFSTI-11G | heating | MQTT template sensors: 2x temperature (-IN,-OUT), heating swithed on (-ON) 
 
 All devices marked in eLan as:
-- **lights** are reported to HA as ligth
+- **lights** are reported to HA as light (controllable)
 - **heating** are reported as temperature sensors and on/off sensor
