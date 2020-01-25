@@ -39,7 +39,7 @@ _(*) these can be captured using google web browser. Open developer tools (F12),
 # Currently tested devices
 Device | eLan type | Home Assitant
 ---|---|---
-RFSA-66M | ligth | MQTT template light
+RFSA-66M | light | MQTT template light
 RFDA-11B | dimmed light | MQTT template dimmer light
 RFSTI-11G | heating | MQTT template sensors: 2x temperature (-IN,-OUT), heating swithed on (-ON) 
 
