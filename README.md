@@ -26,7 +26,7 @@ Command messages are using topic /eLan/device_mac_address/command
 
 # Getting support for autodiscovery of your device
 To get you device supported please open Issue ticket in github.
-In ticke you have to provide:
+In ticket you have to provide:
 - device type (prodict name)
 - device typy as selected in eLan (light, heating,...)
 - device info message*
