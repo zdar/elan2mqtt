@@ -34,4 +34,15 @@ In ticket you have to provide:
 - example of device commands*
 and when possible home assistant MQTT sensor definition
 
-(*) these can be captured using google web browser. Open developer tools (F12), log in into elan, use your device. In network tab you will see messages passing between browser and elan. Attach those relevant to you device.
+_(*) these can be captured using google web browser. Open developer tools (F12), log in into elan, use your device. In network tab you will see messages passing between browser and elan. Attach those relevant to you device._
+
+# Currently tested devices
+Device | eLan type | Home Assitant
+---|---|---
+RFSA-66M | ligth | MQTT template light
+RFDA-11B | dimmed light | MQTT template dimmer light
+RFSTI-11G | heating | MQTT template sensors: 2x temperature (-IN,-OUT), heating swithed on (-ON) 
+
+All devices marked in eLan as:
+- **lights** are reported to HA as ligth
+- **heating** are reported as temperature sensors and on/off sensor
