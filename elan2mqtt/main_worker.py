@@ -55,11 +55,20 @@ async def main():
     async def publish_discovery(mac):
         """Publish message to status topic. Topic syntax is: elan / mac / status """
         if mac in d:
+            if ("product type" in d[mac]['info']['device info']):
+                # placeholder for device type versus protuct type check
+                pass
+            else:
+                d[mac]['info']['device info']['product type'] = '---'
             logger.info("Publishing discovery for " + d[mac]['url'])
-            if 'light' in d[mac]['info']['device info']['type']:
+            #
+            # User should set type to light. But sometimes...
+            # That is why we will always treat RFDA-11B a light dimmer
+            #
+            if ('light' in d[mac]['info']['device info']['type']) or (d[mac]['info']['device info']['product type'] == 'RFDA-11B'):
                 logger.info(d[mac]['info']['device info'])
 
-                if 'on' in d[mac]['info']['primary actions']:
+                if ('on' in d[mac]['info']['primary actions']):
                     logger.info("Primary action of light is ON")
                     discovery = {
                         'schema': 'basic',
@@ -84,7 +93,7 @@ async def main():
                     logger.info("Discovery published for " + d[mac]['url'] +
                                 " " + json.dumps(discovery))
 
-                if 'brightness' in d[mac]['info']['primary actions']:
+                if ('brightness' in d[mac]['info']['primary actions']) or (d[mac]['info']['device info']['product type'] == 'RFDA-11B'):
                     logger.info("Primary action of light is BRIGHTNESS")
                     discovery = {
                         'schema': 'template',
@@ -117,7 +126,11 @@ async def main():
                     logger.info("Discovery published for " + d[mac]['url'] +
                                 " " + json.dumps(discovery))
 
-            if d[mac]['info']['device info']['type'] == 'heating':
+            #
+            # User should set type to heating. But sometimes...
+            # That is why we will always treat RFSTI-11G a temperature sensor/thermost
+            #
+            if (d[mac]['info']['device info']['type'] == 'heating') or (d[mac]['info']['device info']['product type'] == 'RFSTI-11G'):
                 logger.info(d[mac]['info']['device info'])
 
                 discovery = {
@@ -180,6 +193,31 @@ async def main():
 #                    'command_topic': d[mac]['control_topic']
                 }
                 await c.publish('homeassistant/sensor/' + mac + '/ON/config',
+                                bytearray(json.dumps(discovery), 'utf-8'))
+
+                logger.info("Discovery published for " + d[mac]['url'] + " " +
+                            json.dumps(discovery))
+
+            if ('detector' in d[mac]['info']['device info']['type']) or (d[mac]['info']['device info']['product type'] == 'RFWD-100'):
+                logger.info(d[mac]['info']['device info'])
+
+                discovery = {
+                    'name': d[mac]['info']['device info']['label'],
+                    'unique_id': ('eLan-' + mac),
+                    'device': {
+                        'name': d[mac]['info']['device info']['label'],
+                        'identifiers' : ('eLan-detector-' + mac),
+                        'connections': [["mac",  mac]],
+                        'mf': 'Elko EP',
+                        'mdl': d[mac]['info']['device info']['product type']
+                    },
+                    'state_topic': d[mac]['status_topic'],
+#                    'device_class': 'heat',
+                    'value_template':
+                    '{%- if value_json.on -%}on{%- else -%}off{%- endif -%}'
+#                    'command_topic': d[mac]['control_topic']
+                }
+                await c.publish('homeassistant/sensor/' + mac + '/config',
                                 bytearray(json.dumps(discovery), 'utf-8'))
 
                 logger.info("Discovery published for " + d[mac]['url'] + " " +
