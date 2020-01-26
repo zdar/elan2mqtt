@@ -127,8 +127,10 @@ async def main():
                                 " " + json.dumps(discovery))
 
             #
+            # Thermostats
+            #
             # User should set type to heating. But sometimes...
-            # That is why we will always treat RFSTI-11G a temperature sensor/thermost
+            # That is why we will always treat RFSTI-11G a temperature sensor/thermostat
             #
             if (d[mac]['info']['device info']['type'] == 'heating') or (d[mac]['info']['device info']['product type'] == 'RFSTI-11G'):
                 logger.info(d[mac]['info']['device info'])
@@ -198,9 +200,32 @@ async def main():
                 logger.info("Discovery published for " + d[mac]['url'] + " " +
                             json.dumps(discovery))
 
-            if ('detector' in d[mac]['info']['device info']['type']) or (d[mac]['info']['device info']['product type'] == 'RFWD-100'):
+            #
+            # Detectors
+            #
+
+            if ('detector' in d[mac]['info']['device info']['type']) or ('RFWD-' in d[mac]['info']['device info']['product type']) or ('RFSD-' in d[mac]['info']['device info']['product type']) or ('RFMD-' in d[mac]['info']['device info']['product type']) or ('RFSF-' in d[mac]['info']['device info']['product type']):
                 logger.info(d[mac]['info']['device info'])
 
+                icon = ''
+
+                # A wild guess of icon
+                if ('window' in d[mac]['info']['device info']['type']) or ('RFWD-' in d[mac]['info']['device info']['product type']):
+                    icon = 'mdi:window-open'
+                    if ('door' in str(d[mac]['info']['device info']['label']).lower()):
+                        icon = 'mdi:door-open'
+
+                if ('smoke' in d[mac]['info']['device info']['type']) or ('RFSD-' in d[mac]['info']['device info']['product type']):
+                    icon = 'mdi:smoke-detector'
+
+                if ('motion' in d[mac]['info']['device info']['type']) or ('RFMD-' in d[mac]['info']['device info']['product type']):
+                    icon = 'mdi:motion-sensor'
+
+                if ('flood' in d[mac]['info']['device info']['type']) or ('RFSF-' in d[mac]['info']['device info']['product type']):
+                    icon = 'mdi:waves'
+
+
+                # Silently expect that all detectors provide "detect" action
                 discovery = {
                     'name': d[mac]['info']['device info']['label'],
                     'unique_id': ('eLan-' + mac),
@@ -214,14 +239,144 @@ async def main():
                     'state_topic': d[mac]['status_topic'],
 #                    'device_class': 'heat',
                     'value_template':
-                    '{%- if value_json.on -%}on{%- else -%}off{%- endif -%}'
+                    '{%- if value_json.detect -%}on{%- else -%}off{%- endif -%}'
 #                    'command_topic': d[mac]['control_topic']
                 }
+
+                if (icon != ''):
+                    discovery['icon'] = icon
+
                 await c.publish('homeassistant/sensor/' + mac + '/config',
                                 bytearray(json.dumps(discovery), 'utf-8'))
 
                 logger.info("Discovery published for " + d[mac]['url'] + " " +
                             json.dumps(discovery))
+
+                # Silently expect that all detectors provide "battery" status
+                # Battery
+                discovery = {
+                    'name': d[mac]['info']['device info']['label'] + 'battery',
+                    'unique_id': ('eLan-' + mac + '-battery'),
+                    'device': {
+                        'name': d[mac]['info']['device info']['label'],
+                        'identifiers' : ('eLan-detector-' + mac),
+                        'connections': [["mac",  mac]],
+                        'mf': 'Elko EP',
+                        'mdl': d[mac]['info']['device info']['product type']
+                    },
+                    'device_class': 'battery',
+                    'state_topic': d[mac]['status_topic'],
+                    'value_template':
+                    '{%- if value_json.battery -%}100{%- else -%}0{%- endif -%}'
+#                    'command_topic': d[mac]['control_topic']
+                }
+                await c.publish('homeassistant/sensor/' + mac + '/battery/config',
+                                bytearray(json.dumps(discovery), 'utf-8'))
+
+                logger.info("Discovery published for " + d[mac]['url'] + " " +
+                            json.dumps(discovery))
+
+
+                # START - RFWD window/door detector
+                if (d[mac]['info']['device info']['product type'] == 'RFWD-100'):
+                    # RFWD-100 status messages
+                    # {alarm: true, detect: false, tamper: “closed”, automat: false, battery: true, disarm: false}
+                    # {alarm: true, detect: true, tamper: “closed”, automat: false, battery: true, disarm: false}
+                    # Alarm
+                    discovery = {
+                        'name': d[mac]['info']['device info']['label'] + 'alarm',
+                        'unique_id': ('eLan-' + mac + '-alarm'),
+                        'icon': 'mdi:alarm-light',
+                        'device': {
+                            'name': d[mac]['info']['device info']['label'],
+                            'identifiers' : ('eLan-detector-' + mac),
+                            'connections': [["mac",  mac]],
+                            'mf': 'Elko EP',
+                            'mdl': d[mac]['info']['device info']['product type']
+                        },
+                        'state_topic': d[mac]['status_topic'],
+                        'value_template':
+                        '{%- if value_json.alarm -%}on{%- else -%}off{%- endif -%}'
+    #                    'command_topic': d[mac]['control_topic']
+                    }
+                    await c.publish('homeassistant/sensor/' + mac + '/alarm/config',
+                                    bytearray(json.dumps(discovery), 'utf-8'))
+
+                    logger.info("Discovery published for " + d[mac]['url'] + " " +
+                                json.dumps(discovery))
+                    # Tamper
+                    discovery = {
+                        'name': d[mac]['info']['device info']['label'] + 'tamper',
+                        'unique_id': ('eLan-' + mac + '-tamper'),
+                        'icon': 'mdi:gesture-tap',
+                        'device': {
+                            'name': d[mac]['info']['device info']['label'],
+                            'identifiers' : ('eLan-detector-' + mac),
+                            'connections': [["mac",  mac]],
+                            'mf': 'Elko EP',
+                            'mdl': d[mac]['info']['device info']['product type']
+                        },
+                        'state_topic': d[mac]['status_topic'],
+                        'value_template':
+                        '{%- if value_json.tamper == "opened" -%}on{%- else -%}off{%- endif -%}'
+    #                    'command_topic': d[mac]['control_topic']
+                    }
+                    await c.publish('homeassistant/sensor/' + mac + '/tamper/config',
+                                    bytearray(json.dumps(discovery), 'utf-8'))
+
+                    logger.info("Discovery published for " + d[mac]['url'] + " " +
+                                json.dumps(discovery))
+
+                    # Automat
+                    discovery = {
+                        'name': d[mac]['info']['device info']['label'] + 'automat',
+                        'unique_id': ('eLan-' + mac + '-automat'),
+                        'icon': 'mdi:arrow-decision-auto',
+                        'device': {
+                            'name': d[mac]['info']['device info']['label'],
+                            'identifiers' : ('eLan-detector-' + mac),
+                            'connections': [["mac",  mac]],
+                            'mf': 'Elko EP',
+                            'mdl': d[mac]['info']['device info']['product type']
+                        },
+                        'state_topic': d[mac]['status_topic'],
+                        'value_template':
+                        '{%- if value_json.automat -%}on{%- else -%}off{%- endif -%}'
+    #                    'command_topic': d[mac]['control_topic']
+                    }
+                    await c.publish('homeassistant/sensor/' + mac + '/automat/config',
+                                    bytearray(json.dumps(discovery), 'utf-8'))
+
+                    logger.info("Discovery published for " + d[mac]['url'] + " " +
+                                json.dumps(discovery))
+
+                    # Disarm
+                    discovery = {
+                        'name': d[mac]['info']['device info']['label'] + 'disarm',
+                        'unique_id': ('eLan-' + mac + '-disarm'),
+                        'icon': 'mdi:lock-alert',
+                        'device': {
+                            'name': d[mac]['info']['device info']['label'],
+                            'identifiers' : ('eLan-detector-' + mac),
+                            'connections': [["mac",  mac]],
+                            'mf': 'Elko EP',
+                            'mdl': d[mac]['info']['device info']['product type']
+                        },
+                        'state_topic': d[mac]['status_topic'],
+                        'value_template':
+                        '{%- if value_json.disarm -%}on{%- else -%}off{%- endif -%}'
+    #                    'command_topic': d[mac]['control_topic']
+                    }
+                    await c.publish('homeassistant/sensor/' + mac + '/disarm/config',
+                                    bytearray(json.dumps(discovery), 'utf-8'))
+
+                    logger.info("Discovery published for " + d[mac]['url'] + " " +
+                                json.dumps(discovery))
+
+                # END - RFWD window/door detector
+
+
+
 
     async def on_message(topic, data):
         #print("Got message:", topic, data)
