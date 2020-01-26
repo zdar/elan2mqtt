@@ -29,8 +29,8 @@ Elan2mqqt has only limited autodiscovery for Home Assistant. If the device is no
 # Getting support for autodiscovery of your device
 To get you device supported please open Issue ticket in github.
 In ticket you have to provide:
-- device type (prodict name)
-- device typy as selected in eLan (light, heating,...)
+- device type (product name)
+- device type as selected in eLan (light, heating,...)
 - device info message*
 - device status message*
 - example of device commands*
