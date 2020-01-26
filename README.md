@@ -22,7 +22,7 @@ Automatic - Add https://github.com/zdar/elan2mqtt as a new repository and instal
 Use python to run main.py (check command line arguments)
 
 # Device not supported by autodiscovery
-Elan2mqqt has only limited autodiscovery for Home Assistant. If the device is not discovred by Home Assistant it can still be used using manual definition of MQTT template sensor. 
+Elan2mqqt has only limited autodiscovery for Home Assistant. If the device is not discovered by Home Assistant it can still be used. All devices can be manually defined using MQTT integration. For each device two topics are created:
 - Status messages are using topic /eLan/*device_mac_address*/status
 - Command messages are using topic /eLan/*device_mac_address*/command
 
