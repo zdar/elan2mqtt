@@ -34,7 +34,7 @@ In ticket you have to provide:
 - device info message*
 - device status message*
 - example of device commands*
-and when possible home assistant MQTT sensor definition
+and when possible home assistant MQTT definition
 
 _(*) these can be captured using google web browser. Open developer tools (F12), log in into elan, use your device. In network tab you will see messages passing between browser and elan. Attach those relevant to you device._
 
