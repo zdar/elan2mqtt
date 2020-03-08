@@ -83,6 +83,7 @@ async def main():
                         },
                         'command_topic': d[mac]['control_topic'],
                         'state_topic': d[mac]['status_topic'],
+                        'json_attributes_topic': d[mac]['status_topic'],
                         'payload_off': '{"on":false}',
                         'payload_on': '{"on":true}',
                         'state_value_template':
@@ -107,6 +108,7 @@ async def main():
                             'mdl': d[mac]['info']['device info']['product type']
                         },
                         'state_topic': d[mac]['status_topic'],
+                        'json_attributes_topic': d[mac]['status_topic'],
                         'command_topic': d[mac]['control_topic'],
                         'command_on_template':
                         '{%- if brightness is defined -%} {"brightness": {{ (brightness * '
@@ -147,6 +149,7 @@ async def main():
                     },
                     'device_class': 'temperature',
                     'state_topic': d[mac]['status_topic'],
+                    'json_attributes_topic': d[mac]['status_topic'],
                     'value_template': '{{ value_json["temperature IN"] }}',
                     'unit_of_measurement': '°C'
                 }
@@ -166,6 +169,7 @@ async def main():
                         'mdl': d[mac]['info']['device info']['product type']
                     },
                     'state_topic': d[mac]['status_topic'],
+                    'json_attributes_topic': d[mac]['status_topic'],
                     'device_class': 'temperature',
                     'value_template': '{{ value_json["temperature OUT"] }}',
                     'unit_of_measurement': '°C'
@@ -189,6 +193,7 @@ async def main():
                         'mdl': d[mac]['info']['device info']['product type']
                     },
                     'state_topic': d[mac]['status_topic'],
+                    'json_attributes_topic': d[mac]['status_topic'],
 #                    'device_class': 'heat',
                     'value_template':
                     '{%- if value_json.on -%}on{%- else -%}off{%- endif -%}'
@@ -237,6 +242,7 @@ async def main():
                         'mdl': d[mac]['info']['device info']['product type']
                     },
                     'state_topic': d[mac]['status_topic'],
+                    'json_attributes_topic': d[mac]['status_topic'],
 #                    'device_class': 'heat',
                     'value_template':
                     '{%- if value_json.detect -%}on{%- else -%}off{%- endif -%}'
@@ -266,6 +272,7 @@ async def main():
                     },
                     'device_class': 'battery',
                     'state_topic': d[mac]['status_topic'],
+                    'json_attributes_topic': d[mac]['status_topic'],
                     'value_template':
                     '{%- if value_json.battery -%}100{%- else -%}0{%- endif -%}'
 #                    'command_topic': d[mac]['control_topic']
@@ -295,6 +302,7 @@ async def main():
                             'mdl': d[mac]['info']['device info']['product type']
                         },
                         'state_topic': d[mac]['status_topic'],
+                        'json_attributes_topic': d[mac]['status_topic'],
                         'value_template':
                         '{%- if value_json.alarm -%}on{%- else -%}off{%- endif -%}'
     #                    'command_topic': d[mac]['control_topic']
@@ -317,6 +325,7 @@ async def main():
                             'mdl': d[mac]['info']['device info']['product type']
                         },
                         'state_topic': d[mac]['status_topic'],
+                        'json_attributes_topic': d[mac]['status_topic'],
                         'value_template':
                         '{%- if value_json.tamper == "opened" -%}on{%- else -%}off{%- endif -%}'
     #                    'command_topic': d[mac]['control_topic']
@@ -340,6 +349,7 @@ async def main():
                             'mdl': d[mac]['info']['device info']['product type']
                         },
                         'state_topic': d[mac]['status_topic'],
+                        'json_attributes_topic': d[mac]['status_topic'],
                         'value_template':
                         '{%- if value_json.automat -%}on{%- else -%}off{%- endif -%}'
     #                    'command_topic': d[mac]['control_topic']
@@ -363,6 +373,7 @@ async def main():
                             'mdl': d[mac]['info']['device info']['product type']
                         },
                         'state_topic': d[mac]['status_topic'],
+                        'json_attributes_topic': d[mac]['status_topic'],
                         'value_template':
                         '{%- if value_json.disarm -%}on{%- else -%}off{%- endif -%}'
     #                    'command_topic': d[mac]['control_topic']
