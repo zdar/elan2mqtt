@@ -162,6 +162,7 @@ async def main():
             except:
                 # It is perfectly normal to reach here - e.g. timeout
                 pass
+                time.sleep(.25)
 
         logger.error("Should not ever reach here")
         await c.disconnect()
