@@ -130,9 +130,9 @@ async def main():
             # Switches
             # RFSA-6xM units and "appliance" class of eLan
             # Note: handled as ELSE of light entities to avoid lights on RFSA-6xM units
-            elif ('appliance' in d[mac]['info']['device info']['type']) or (d[mac]['info']['device info']['product type'] == 'RFSA-61M')or (d[mac]['info']['device info']['product type'] == 'RFSA-66M'):
+            elif ('appliance' in d[mac]['info']['device info']['type']) or (d[mac]['info']['device info']['product type'] == 'RFSA-61M') or (d[mac]['info']['device info']['product type'] == 'RFSA-66M') or (d[mac]['info']['device info']['product type'] == 'RFSA-11B')  or (d[mac]['info']['device info']['product type'] == 'RFUS-61') or (d[mac]['info']['device info']['product type'] == 'RFSA-62B'):
                 logger.info(d[mac]['info']['device info'])
-
+                # "on" primary action is required for switches
                 if ('on' in d[mac]['info']['primary actions']):
                     logger.info("Primary action of device is ON")
                     discovery = {
@@ -158,10 +158,6 @@ async def main():
                                     bytearray(json.dumps(discovery), 'utf-8'))
                     logger.info("Discovery published for " + d[mac]['url'] +
                                 " " + json.dumps(discovery))
-
-
-
-
 
             #
             # Thermostats
@@ -239,6 +235,59 @@ async def main():
 
                 logger.info("Discovery published for " + d[mac]['url'] + " " +
                             json.dumps(discovery))
+            #
+            # Thermometers
+            #
+            # User should set type to thermometer. But sometimes...
+            #
+
+            if (d[mac]['info']['device info']['type'] == 'thermometer') or (d[mac]['info']['device info']['product type'] == 'RFTI-10B'):
+                logger.info(d[mac]['info']['device info'])
+
+                discovery = {
+                    'name': d[mac]['info']['device info']['label'] + '-IN',
+                    'unique_id': ('eLan-' + mac + '-IN'),
+                    'device': {
+                        'name': d[mac]['info']['device info']['label'],
+                        'identifiers': ('eLan-thermometer-' + mac),
+                        'connections': [["mac",  mac]],
+                        'mf': 'Elko EP',
+                        'mdl': d[mac]['info']['device info']['product type']
+                    },
+                    'device_class': 'temperature',
+                    'state_topic': d[mac]['status_topic'],
+                    'json_attributes_topic': d[mac]['status_topic'],
+                    'value_template': '{{ value_json["temperature IN"] }}',
+                    'unit_of_measurement': '°C'
+                }
+                await c.publish('homeassistant/sensor/' + mac + '/IN/config',
+                                bytearray(json.dumps(discovery), 'utf-8'))
+                logger.info("Discovery published for " + d[mac]['url'] + " " +
+                            json.dumps(discovery))
+
+                discovery = {
+                    'name': d[mac]['info']['device info']['label'] + '-OUT',
+                    'unique_id': ('eLan-' + mac + '-OUT'),
+                    'device': {
+                        'name': d[mac]['info']['device info']['label'],
+                        'identifiers': ('eLan-thermometer-' + mac),
+                        'connections': [["mac",  mac]],
+                        'mf': 'Elko EP',
+                        'mdl': d[mac]['info']['device info']['product type']
+                    },
+                    'state_topic': d[mac]['status_topic'],
+                    'json_attributes_topic': d[mac]['status_topic'],
+                    'device_class': 'temperature',
+                    'value_template': '{{ value_json["temperature OUT"] }}',
+                    'unit_of_measurement': '°C'
+                }
+                await c.publish('homeassistant/sensor/' + mac + '/OUT/config',
+                                bytearray(json.dumps(discovery), 'utf-8'))
+
+                logger.info("Discovery published for " + d[mac]['url'] + " " +
+                            json.dumps(discovery))
+
+
 
             #
             # Detectors
