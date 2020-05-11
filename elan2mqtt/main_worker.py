@@ -37,7 +37,6 @@ import hashlib
 
 logger = logging.getLogger(__name__)
 
-@asyncio.coroutine
 async def main():
     # placehloder for devices data
     d = {}
@@ -63,9 +62,9 @@ async def main():
             logger.info("Publishing discovery for " + d[mac]['url'])
             #
             # User should set type to light. But sometimes...
-            # That is why we will always treat RFDA-11B a light dimmer
+            # That is why we will always treat RFDA-11B as a light dimmer
             #
-            if ('light' in d[mac]['info']['device info']['type']) or (d[mac]['info']['device info']['product type'] == 'RFDA-11B'):
+            if ('light' in d[mac]['info']['device info']['type']) or ('lamp' in d[mac]['info']['device info']['type']) or (d[mac]['info']['device info']['product type'] == 'RFDA-11B'):
                 logger.info(d[mac]['info']['device info'])
 
                 if ('on' in d[mac]['info']['primary actions']):
@@ -108,7 +107,7 @@ async def main():
                             'mdl': d[mac]['info']['device info']['product type']
                         },
                         'state_topic': d[mac]['status_topic'],
-                        'json_attributes_topic': d[mac]['status_topic'],
+                        #'json_attributes_topic': d[mac]['status_topic'],
                         'command_topic': d[mac]['control_topic'],
                         'command_on_template':
                         '{%- if brightness is defined -%} {"brightness": {{ (brightness * '
@@ -127,6 +126,42 @@ async def main():
                                     bytearray(json.dumps(discovery), 'utf-8'))
                     logger.info("Discovery published for " + d[mac]['url'] +
                                 " " + json.dumps(discovery))
+            #
+            # Switches
+            # RFSA-6xM units and "appliance" class of eLan
+            # Note: handled as ELSE of light entities to avoid lights on RFSA-6xM units
+            elif ('appliance' in d[mac]['info']['device info']['type']) or (d[mac]['info']['device info']['product type'] == 'RFSA-61M')or (d[mac]['info']['device info']['product type'] == 'RFSA-66M'):
+                logger.info(d[mac]['info']['device info'])
+
+                if ('on' in d[mac]['info']['primary actions']):
+                    logger.info("Primary action of device is ON")
+                    discovery = {
+                        'schema': 'basic',
+                        'name': d[mac]['info']['device info']['label'],
+                        'unique_id': ('eLan-' + mac),
+                        'device': {
+                            'name': d[mac]['info']['device info']['label'],
+                            'identifiers': ('eLan-switch-' + mac),
+                            'connections': [["mac",  mac]],
+                            'mf': 'Elko EP',
+                            'mdl': d[mac]['info']['device info']['product type']
+                        },
+                        'command_topic': d[mac]['control_topic'],
+                        'state_topic': d[mac]['status_topic'],
+                        'json_attributes_topic': d[mac]['status_topic'],
+                        'payload_off': '{"on":false}',
+                        'payload_on': '{"on":true}',
+                        'state_value_template':
+                        '{%- if value_json.on -%}on{%- else -%}off{%- endif -%}'
+                    }
+                    await c.publish('homeassistant/switch/' + mac + '/config',
+                                    bytearray(json.dumps(discovery), 'utf-8'))
+                    logger.info("Discovery published for " + d[mac]['url'] +
+                                " " + json.dumps(discovery))
+
+
+
+
 
             #
             # Thermostats
@@ -414,7 +449,7 @@ async def main():
         'key': hash
         }
 
-        logger.info("Get main/login paget (to get cookies)")
+        logger.info("Get main/login page (to get cookies)")
         # dirty check if we are authenticated and to get session
         resp = await session.get(args.elan_url + '/', timeout=3)
 
@@ -541,6 +576,7 @@ async def main():
                 except asyncio.TimeoutError:
                     # TimeoutError exception during status or discovery
                     pass
+                    time.sleep(0.1)
             # process incomming MQTT commands
             try:
                 # Waiting for MQTT message
@@ -555,6 +591,8 @@ async def main():
             except asyncio.TimeoutError:
                 # It is perfectly normal to reach here - e.g. timeout
                 pass
+                time.sleep(0.2)
+
 
         logger.error("Should not ever reach here")
         await c.disconnect()
