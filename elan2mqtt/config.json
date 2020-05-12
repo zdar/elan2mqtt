@@ -1,6 +1,6 @@
 {
   "name": "eLAN MQTT",
-  "version": "1.9",
+  "version": "1.10",
   "slug": "elan2mqtt",
   "description": "MQTT gateway for eLAN",
   "arch": ["armhf", "armv7", "aarch64", "amd64", "i386"],
@@ -11,14 +11,16 @@
     "MQTTserver": "mqtt://username:password@ip.address",
     "username": "admin",
     "password": "elkoep",
-    "log_level": "notice"
+    "log_level": "notice",
+    "disable_autodiscovery": "False"
   },
   "schema": {
     "eLanURL": "str",
     "MQTTserver": "str",
     "username": "str",
     "password": "str",
-    "log_level": "match(^(trace|debug|info|notice|warning|error|fatal)$)"
+    "log_level": "match(^(trace|debug|info|notice|warning|error|fatal)$)",
+    "disable_autodiscovery": "bool?"
   },
   "environment": {
     "LOG_FORMAT": "{LEVEL}: {MESSAGE}"

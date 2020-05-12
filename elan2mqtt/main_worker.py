@@ -151,7 +151,9 @@ async def main():
                         'json_attributes_topic': d[mac]['status_topic'],
                         'payload_off': '{"on":false}',
                         'payload_on': '{"on":true}',
-                        'state_value_template':
+                        'state_off': 'off',
+                        'state_on' : 'on',
+                        'value_template':
                         '{%- if value_json.on -%}on{%- else -%}off{%- endif -%}'
                     }
                     await c.publish('homeassistant/switch/' + mac + '/config',
@@ -292,6 +294,11 @@ async def main():
             #
             # Detectors
             #
+            # RFWD-100 status messages
+            # {alarm: true, detect: false, tamper: “closed”, automat: false, battery: true, disarm: false}
+            # {alarm: true, detect: true, tamper: “closed”, automat: false, battery: true, disarm: false}
+            # RFSF-1B status message
+            # {"alarm": false,	"detect": false, "automat": true, "battery": true, "disarm": false }
 
             if ('detector' in d[mac]['info']['device info']['type']) or ('RFWD-' in d[mac]['info']['device info']['product type']) or ('RFSD-' in d[mac]['info']['device info']['product type']) or ('RFMD-' in d[mac]['info']['device info']['product type']) or ('RFSF-' in d[mac]['info']['device info']['product type']):
                 logger.info(d[mac]['info']['device info'])
@@ -356,7 +363,7 @@ async def main():
                     },
                     'device_class': 'battery',
                     'state_topic': d[mac]['status_topic'],
-                    'json_attributes_topic': d[mac]['status_topic'],
+                    #'json_attributes_topic': d[mac]['status_topic'],
                     'value_template':
                     '{%- if value_json.battery -%}100{%- else -%}0{%- endif -%}'
 #                    'command_topic': d[mac]['control_topic']
@@ -369,10 +376,12 @@ async def main():
 
 
                 # START - RFWD window/door detector
-                if (d[mac]['info']['device info']['product type'] == 'RFWD-100'):
+                if (d[mac]['info']['device info']['product type'] == 'RFWD-100') or (d[mac]['info']['device info']['product type'] == 'RFSF-1B'):
                     # RFWD-100 status messages
                     # {alarm: true, detect: false, tamper: “closed”, automat: false, battery: true, disarm: false}
                     # {alarm: true, detect: true, tamper: “closed”, automat: false, battery: true, disarm: false}
+                    # RFSF-1B
+                    # {"alarm": false,	"detect": false, "automat": true, "battery": true, "disarm": false }
                     # Alarm
                     discovery = {
                         'name': d[mac]['info']['device info']['label'] + 'alarm',
@@ -396,7 +405,12 @@ async def main():
 
                     logger.info("Discovery published for " + d[mac]['url'] + " " +
                                 json.dumps(discovery))
+
+                if (d[mac]['info']['device info']['product type'] == 'RFWD-100'):
                     # Tamper
+                    # RFWD-100 status messages
+                    # {alarm: true, detect: false, tamper: “closed”, automat: false, battery: true, disarm: false}
+                    # {alarm: true, detect: true, tamper: “closed”, automat: false, battery: true, disarm: false}
                     discovery = {
                         'name': d[mac]['info']['device info']['label'] + 'tamper',
                         'unique_id': ('eLan-' + mac + '-tamper'),
@@ -477,7 +491,7 @@ async def main():
         #print("Got message:", topic, data)
         try:
             tmp = topic.split('/')
-            # check if it one of devices we know
+            # check if it is one of devices we know
             if (tmp[0] == 'eLan') and (tmp[2] == 'command') and (tmp[1] in d):
                 #post command to device - warning there are no checks
                 #print(d[tmp[1]]['url'], data)
@@ -583,7 +597,12 @@ async def main():
         logger.info("Subscribed to " + d[mac]['control_topic'])
 
         # publish autodiscovery info
-        await publish_discovery(mac)
+        logger.info("Autodiscovery disabled: " + str(args.disable_autodiscovery))
+
+        if args.disable_autodiscovery==True:
+            logger.info("Autodiscovery disabled")
+        else:
+            await publish_discovery(mac)
 
         # publish status over mqtt
         #print("Publishing status to topic " + d[mac]['status_topic'])
@@ -615,7 +634,10 @@ async def main():
                         for device in device_list:
                             mac = str(device_list[device]['info'][
                                 'device info']['address'])
-                            await publish_discovery(mac)
+                            if args.disable_autodiscovery==True:
+                                logger.info("Autodiscovery disabled")
+                            else:
+                                await publish_discovery(mac)
 
                     for device in device_list:
                         mac = str(device_list[device]['info']['device info'][
@@ -650,9 +672,19 @@ async def main():
         time.sleep(5)
 
 
+def str2bool(v):
+    if isinstance(v, bool):
+       return v
+    if v.lower() in ('yes', 'true', 't', 'y', '1'):
+        return True
+    elif v.lower() in ('no', 'false', 'f', 'n', '0'):
+        return False
+    else:
+        raise argparse.ArgumentTypeError('Boolean value expected.')
+
 if __name__ == '__main__':
     # parse arguments
-    parser = argparse.ArgumentParser(description='Process some integers.')
+    parser = argparse.ArgumentParser(description='Process some arguments.')
     parser.add_argument(
         'elan_url', metavar='elan-url', help='URL of eLan (http://x.x.x.x/)')
     parser.add_argument(
@@ -680,6 +712,15 @@ if __name__ == '__main__':
         dest='log_level',
         default='warning',
         help='Log level debug|info|warning|error|fatal')
+    parser.add_argument(
+        '-disable-autodiscovery',
+        metavar='disable_autodiscovery',
+        nargs='?',
+        dest='disable_autodiscovery',
+        default=False,
+        type=str2bool,
+        help='Disable autodiscovery True|False')
+       
     args = parser.parse_args()
 
     formatter = "[%(asctime)s] {%(filename)s:%(lineno)d} %(levelname)s - %(message)s"
