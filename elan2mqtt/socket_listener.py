@@ -49,7 +49,7 @@ async def main():
 
 
     # setup mqtt (aiomqtt)
-    c = MQTTClient()
+    c = MQTTClient(config={'auto_reconnect': False})
     logger.info("Connecting to MQTT broker")
     logger.info(args.mqtt_broker)
     await c.connect(args.mqtt_broker)
@@ -67,7 +67,7 @@ async def main():
     'key': hash
     }
 
-    logger.info("Get main/login paget (to get cookies)")
+    logger.info("Get main/login page (to get cookies)")
     # dirty check if we are authenticated and to get session
     resp = await session.get(args.elan_url + '/', timeout=3)
 
@@ -152,7 +152,7 @@ async def main():
                 #    echo = await websocket.recv()
                     echo = await websocket.receive_json()
                     if echo is None:
-                        pass
+                        time.sleep(.25)
                         #print("Empty message?")
                     else:
                         print(echo)
@@ -161,13 +161,18 @@ async def main():
                         await publish_status(u[id])
             except:
                 # It is perfectly normal to reach here - e.g. timeout
-                pass
                 time.sleep(.25)
+                if not c._connected_state.is_set():
+                    raise ClientException("Broker not connected")
 
         logger.error("Should not ever reach here")
         await c.disconnect()
     except ClientException as ce:
-        logger.error("Client exception: %s" % ce)
+        logger.error("SOCKET LISTENER: Client exception: %s" % ce)
+        try:
+            await c.disconnect()
+        except:
+            pass
         time.sleep(5)
 
 
@@ -216,7 +221,7 @@ if __name__ == '__main__':
             asyncio.get_event_loop().run_until_complete(main())
         except:
             logger.exception(
-                "Something went wrong. But don't worry we will start over again."
+                "SOCKET LISTENER: Something went wrong. But don't worry we will start over again."
             )
             logger.error("But at first take some break. Sleeping for 30 s")
             time.sleep(30)

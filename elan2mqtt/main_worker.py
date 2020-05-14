@@ -60,7 +60,252 @@ async def main():
             else:
                 d[mac]['info']['device info']['product type'] = '---'
             logger.info("Publishing discovery for " + d[mac]['url'])
+            ##########################################################################################
+            # Device info library
+            ##########################################################################################
             #
+            ##########################################################################################
+            # RFUS-61 - singel channel multi function relay
+            ##########################################################################################
+            # {"device info":{"type":"appliance","product type":"RFUS-61","address":123456,"label":"xxxx","vote":false},
+            # 	"actions info": {
+            # 		"on": {
+            # 			"type": "bool"
+            # 		},
+            # 		"delayed off": {
+            # 			"type": null
+            # 		},
+            # 		"delayed on": {
+            # 			"type": null
+            # 		},
+            # 		"delayed off: set time": {
+            # 			"type": "int",
+            # 			"min": 2,
+            # 			"max": 3600,
+            # 			"step": 1
+            # 		},
+            # 		"delayed on: set time": {
+            # 			"type": "int",
+            # 			"min": 2,
+            # 			"max": 3600,
+            # 			"step": 1
+            # 		},
+            # 		"automat": {
+            # 			"type": "bool"
+            # 		} 
+            # 	},
+            # 	"primary actions": ["on"],
+            # 	"secondary actions": [["delayed off", "delayed off: set time"], ["delayed on", "delayed on: set time"],"automat"],
+            # 	"settings": {
+            # 	"delayed off: set time": 2400,
+            # 	"delayed on: set time": 2
+            # 	},"id":"13212"}
+            #
+            # State:
+            # {
+            # 	"on": false,
+            # 	"delay": false,
+            # 	"automat": false,
+            # 	"locked": false,
+            # 	"delayed off: set time": 2400,
+            # 	"delayed on: set time": 2
+            # }
+
+            ##########################################################################################
+            # RFSA-66M - six channel multifunction relay (each channel is reported as separate device)
+            ########################################################################################
+            # {"id":"16619","device info":{"address":123456,"label":"xxxxx","type":"irrigation","product type":"RFSA-66M"},
+            # 	"actions info": {
+            # 		"on": {
+            # 			"type": "bool"
+            # 		},
+            # 		"delayed off": {
+            # 			"type": null
+            # 		},
+            # 		"delayed on": {
+            # 			"type": null
+            # 		},
+            # 		"delayed off: set time": {
+            # 			"type": "int",
+            # 			"min": 2,
+            # 			"max": 3600,
+            # 			"step": 1
+            # 		},
+            # 		"delayed on: set time": {
+            # 			"type": "int",
+            # 			"min": 2,
+            # 			"max": 3600,
+            # 			"step": 1
+            # 		},
+            # 		"automat": {
+            # 			"type": "bool"
+            # 		} 
+            # 	},
+            # 	"primary actions": ["on"],
+            # 	"secondary actions": [["delayed off", "delayed off: set time"], ["delayed on", "delayed on: set time"],"automat"],
+            # 	"settings": {
+            # 	"delayed off: set time": 1800,
+            # 	"delayed on: set time": 0
+            # 	}
+            # }
+            # State:
+            # {
+            # 	"on": false,
+            # 	"delay": false,
+            # 	"automat": false,
+            # 	"locked": false,
+            # 	"delayed off: set time": 1800,
+            # 	"delayed on: set time": 0
+            # }
+            ##########################################################################################
+            # RFSA-11B - single channel single function relay 
+            ########################################################################################
+            # {"id":"18457","device info":{"address":123456,"label":"abc","type":"appliance","product type":"RFSA-11B"},
+            # 	"actions info": {
+            # 		"on": {
+            # 			"type": "bool"
+            # 		},
+            # 		"automat": {
+            # 			"type": "bool"
+            # 		} 
+            # 	},
+            # 	"primary actions": ["on"],
+            # 	"secondary actions": ["automat"],
+            # 	"settings": {}
+            # }
+            # State:
+            # {
+            # 	"on": true,
+            # 	"automat": true,
+            # 	"locked": false
+            # }
+            ##########################################################################################
+            # RFSA-62B - dual channel multifunction relay 
+            ########################################################################################
+            # {
+            # 	"id": "43124","device info":{"type":"appliance","product type":"RFSA-62B","address":123456,"label":"abc"},
+            # 	"actions info": {
+            # 		"on": {
+            # 			"type": "bool"
+            # 		},
+            # 		"delayed off": {
+            # 			"type": null
+            # 		},
+            # 		"delayed on": {
+            # 			"type": null
+            # 		},
+            # 		"delayed off: set time": {
+            # 			"type": "int",
+            # 			"min": 2,
+            # 			"max": 3600,
+            # 			"step": 1
+            # 		},
+            # 		"delayed on: set time": {
+            # 			"type": "int",
+            # 			"min": 2,
+            # 			"max": 3600,
+            # 			"step": 1
+            # 		},
+            # 		"automat": {
+            # 			"type": "bool"
+            # 		} 
+            # 	},
+            # 	"primary actions": ["on"],
+            # 	"secondary actions": [["delayed off", "delayed off: set time"], ["delayed on", "delayed on: set time"],"automat"],
+            # 	"settings": {
+            # 	"delayed off: set time": 15,
+            # 	"delayed on: set time": 0
+            # 	}
+            # }
+            # State:
+            # {
+            # 	"on": false,
+            # 	"delay": false,
+            # 	"automat": false,
+            # 	"locked": false,
+            # 	"delayed off: set time": 15,
+            # 	"delayed on: set time": 0
+            # }
+            ##########################################################################################
+            # RFSAI-61B - singel channel multi function relay with button
+            ##########################################################################################
+            # {
+            # 	"id": "41008", "device info": {"type": "ventilation", "product type": "RFSAI-61B", "address": 123456, "label": "abc", "vote": false},
+            # 	"actions info": {
+            # 		"on": {
+            # 			"type": "bool"
+            # 		},
+            # 		"delayed off": {
+            # 			"type": null
+            # 		},
+            # 		"delayed on": {
+            # 			"type": null
+            # 		},
+            # 		"delayed off: set time": {
+            # 			"type": "int",
+            # 			"min": 2,
+            # 			"max": 3600,
+            # 			"step": 1
+            # 		},
+            # 		"delayed on: set time": {
+            # 			"type": "int",
+            # 			"min": 2,
+            # 			"max": 3600,
+            # 			"step": 1
+            # 		},
+            # 		"automat": {
+            # 			"type": "bool"
+            # 		}
+            # 	},
+            # 	"primary actions": ["on"],
+            # 	"secondary actions": [["delayed off", "delayed off: set time"], ["delayed on", "delayed on: set time"], "automat"],
+            # 	"settings": {
+            #             "delayed off: set time": 2,
+            #             "delayed on: set time": 2
+            # 	}
+            # }
+            # State:
+            # {
+            # 	"on": false,
+            # 	"delay": false,
+            # 	"automat": false,
+            # 	"locked": false,
+            # 	"delayed off: set time": 2,
+            # 	"delayed on: set time": 2
+            # }
+
+            ##########################################################################################
+            # RFSF-1B - flood detector
+            ##########################################################################################
+            # {"id":"55275","device info":{"address":239860,"label":"Voda","type":"flood detector","product type":"RFSF-1B"},
+            # 	"actions info": {
+            # 		"automat": {
+            # 			"type": "bool"
+            # 		},
+            # 		"deactivate": {
+            # 			"type": null
+            # 		},
+            # 		"disarm": {
+            # 			"type": "bool"
+            # 		} 
+            # 	},
+            # 	"primary actions": ["deactivate","disarm"],
+            # 	"secondary actions": ["automat"],
+            # 	"settings": {
+            # 	"disarm": false
+            # 	}
+            # }
+            # State:
+            # {
+            # 	"alarm": false,
+            # 	"detect": false,
+            # 	"automat": true,
+            # 	"battery": true,
+            # 	"disarm": false
+            # }
+
+
+
             # User should set type to light. But sometimes...
             # That is why we will always treat RFDA-11B as a light dimmer
             #
@@ -90,8 +335,8 @@ async def main():
                     }
                     await c.publish('homeassistant/light/' + mac + '/config',
                                     bytearray(json.dumps(discovery), 'utf-8'))
-                    logger.info("Discovery published for " + d[mac]['url'] +
-                                " " + json.dumps(discovery))
+                    logger.info("Discovery published for " + d[mac]['url'])
+                    logger.debug(json.dumps(discovery))
 
                 if ('brightness' in d[mac]['info']['primary actions']) or (d[mac]['info']['device info']['product type'] == 'RFDA-11B'):
                     logger.info("Primary action of light is BRIGHTNESS")
@@ -124,8 +369,9 @@ async def main():
                     }
                     await c.publish('homeassistant/light/' + mac + '/config',
                                     bytearray(json.dumps(discovery), 'utf-8'))
-                    logger.info("Discovery published for " + d[mac]['url'] +
-                                " " + json.dumps(discovery))
+                    logger.info("Discovery published for " + d[mac]['url'])
+                    logger.debug(json.dumps(discovery))
+
             #
             # Switches
             # RFSA-6xM units and "appliance" class of eLan
@@ -158,8 +404,9 @@ async def main():
                     }
                     await c.publish('homeassistant/switch/' + mac + '/config',
                                     bytearray(json.dumps(discovery), 'utf-8'))
-                    logger.info("Discovery published for " + d[mac]['url'] +
-                                " " + json.dumps(discovery))
+                    logger.info("Discovery published for " + d[mac]['url'])
+                    logger.debug(json.dumps(discovery))
+
 
             #
             # Thermostats
@@ -188,8 +435,8 @@ async def main():
                 }
                 await c.publish('homeassistant/sensor/' + mac + '/IN/config',
                                 bytearray(json.dumps(discovery), 'utf-8'))
-                logger.info("Discovery published for " + d[mac]['url'] + " " +
-                            json.dumps(discovery))
+                logger.info("Discovery published for " + d[mac]['url'])
+                logger.debug(json.dumps(discovery))
 
                 discovery = {
                     'name': d[mac]['info']['device info']['label'] + '-OUT',
@@ -210,8 +457,8 @@ async def main():
                 await c.publish('homeassistant/sensor/' + mac + '/OUT/config',
                                 bytearray(json.dumps(discovery), 'utf-8'))
 
-                logger.info("Discovery published for " + d[mac]['url'] + " " +
-                            json.dumps(discovery))
+                logger.info("Discovery published for " + d[mac]['url'])
+                logger.debug(json.dumps(discovery))
 #
 # Note - needs to be converted to CLIMATE class
 #
@@ -235,8 +482,8 @@ async def main():
                 await c.publish('homeassistant/sensor/' + mac + '/ON/config',
                                 bytearray(json.dumps(discovery), 'utf-8'))
 
-                logger.info("Discovery published for " + d[mac]['url'] + " " +
-                            json.dumps(discovery))
+                logger.info("Discovery published for " + d[mac]['url'])
+                logger.debug(json.dumps(discovery))
             #
             # Thermometers
             #
@@ -264,8 +511,8 @@ async def main():
                 }
                 await c.publish('homeassistant/sensor/' + mac + '/IN/config',
                                 bytearray(json.dumps(discovery), 'utf-8'))
-                logger.info("Discovery published for " + d[mac]['url'] + " " +
-                            json.dumps(discovery))
+                logger.info("Discovery published for " + d[mac]['url'])
+                logger.debug(json.dumps(discovery))
 
                 discovery = {
                     'name': d[mac]['info']['device info']['label'] + '-OUT',
@@ -286,8 +533,8 @@ async def main():
                 await c.publish('homeassistant/sensor/' + mac + '/OUT/config',
                                 bytearray(json.dumps(discovery), 'utf-8'))
 
-                logger.info("Discovery published for " + d[mac]['url'] + " " +
-                            json.dumps(discovery))
+                logger.info("Discovery published for " + d[mac]['url'])
+                logger.debug(json.dumps(discovery))
 
 
 
@@ -346,8 +593,8 @@ async def main():
                 await c.publish('homeassistant/sensor/' + mac + '/config',
                                 bytearray(json.dumps(discovery), 'utf-8'))
 
-                logger.info("Discovery published for " + d[mac]['url'] + " " +
-                            json.dumps(discovery))
+                logger.info("Discovery published for " + d[mac]['url'])
+                logger.debug(json.dumps(discovery))
 
                 # Silently expect that all detectors provide "battery" status
                 # Battery
@@ -371,8 +618,8 @@ async def main():
                 await c.publish('homeassistant/sensor/' + mac + '/battery/config',
                                 bytearray(json.dumps(discovery), 'utf-8'))
 
-                logger.info("Discovery published for " + d[mac]['url'] + " " +
-                            json.dumps(discovery))
+                logger.info("Discovery published for " + d[mac]['url'])
+                logger.debug(json.dumps(discovery))
 
 
                 # START - RFWD window/door detector
@@ -403,8 +650,8 @@ async def main():
                     await c.publish('homeassistant/sensor/' + mac + '/alarm/config',
                                     bytearray(json.dumps(discovery), 'utf-8'))
 
-                    logger.info("Discovery published for " + d[mac]['url'] + " " +
-                                json.dumps(discovery))
+                    logger.info("Discovery published for " + d[mac]['url'])
+                    logger.debug(json.dumps(discovery))
 
                 if (d[mac]['info']['device info']['product type'] == 'RFWD-100'):
                     # Tamper
@@ -431,8 +678,8 @@ async def main():
                     await c.publish('homeassistant/sensor/' + mac + '/tamper/config',
                                     bytearray(json.dumps(discovery), 'utf-8'))
 
-                    logger.info("Discovery published for " + d[mac]['url'] + " " +
-                                json.dumps(discovery))
+                    logger.info("Discovery published for " + d[mac]['url'])
+                    logger.debug(json.dumps(discovery))
 
                     # Automat
                     discovery = {
@@ -455,8 +702,8 @@ async def main():
                     await c.publish('homeassistant/sensor/' + mac + '/automat/config',
                                     bytearray(json.dumps(discovery), 'utf-8'))
 
-                    logger.info("Discovery published for " + d[mac]['url'] + " " +
-                                json.dumps(discovery))
+                    logger.info("Discovery published for " + d[mac]['url'])
+                    logger.debug(json.dumps(discovery))
 
                     # Disarm
                     discovery = {
@@ -479,8 +726,8 @@ async def main():
                     await c.publish('homeassistant/sensor/' + mac + '/disarm/config',
                                     bytearray(json.dumps(discovery), 'utf-8'))
 
-                    logger.info("Discovery published for " + d[mac]['url'] + " " +
-                                json.dumps(discovery))
+                    logger.info("Discovery published for " + d[mac]['url'])
+                    logger.debug(json.dumps(discovery))
 
                 # END - RFWD window/door detector
 
@@ -541,7 +788,7 @@ async def main():
 
 
     # setup mqtt (aiomqtt)
-    c = MQTTClient()
+    c = MQTTClient(config={'auto_reconnect': False})
     logger.info("Connecting to MQTT broker")
     logger.info(args.mqtt_broker)
     await c.connect(args.mqtt_broker)
@@ -597,7 +844,7 @@ async def main():
         logger.info("Subscribed to " + d[mac]['control_topic'])
 
         # publish autodiscovery info
-        logger.info("Autodiscovery disabled: " + str(args.disable_autodiscovery))
+        #logger.info("Autodiscovery disabled: " + str(args.disable_autodiscovery))
 
         if args.disable_autodiscovery==True:
             logger.info("Autodiscovery disabled")
@@ -665,10 +912,14 @@ async def main():
                 time.sleep(0.2)
 
 
-        logger.error("Should not ever reach here")
+        logger.error("MAIN WORKER: Should not ever reach here")
         await c.disconnect()
     except ClientException as ce:
-        logger.error("Client exception: %s" % ce)
+        logger.error("MAIN WORKER: Client exception: %s" % ce)
+        try:
+            await c.disconnect()
+        except:
+            pass
         time.sleep(5)
 
 
@@ -736,7 +987,7 @@ if __name__ == '__main__':
             asyncio.get_event_loop().run_until_complete(main())
         except:
             logger.exception(
-                "Something went wrong. But don't worry we will start over again."
+                "MAIN WORKER: Something went wrong. But don't worry we will start over again."
             )
             logger.error("But at first take some break. Sleeping for 30 s")
             time.sleep(30)
