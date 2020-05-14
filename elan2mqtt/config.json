@@ -1,6 +1,6 @@
 {
   "name": "eLAN MQTT",
-  "version": "1.11",
+  "version": "1.12",
   "slug": "elan2mqtt",
   "description": "MQTT gateway for eLAN",
   "arch": ["armhf", "armv7", "aarch64", "amd64", "i386"],
