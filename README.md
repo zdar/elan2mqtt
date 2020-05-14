@@ -19,7 +19,7 @@ Note: all connected devices must be defined on eLan
 
 
 # Standalone
-Use python to run main.py (check command line arguments)
+Use python to run main_worker.py and socket_listener.py (check command line arguments)
 
 # Device not supported by autodiscovery
 Elan2mqtt has only limited autodiscovery for Home Assistant. If the device is not discovered by Home Assistant it can still be used. All devices can be manually defined using MQTT integration. For each device two topics are created:
