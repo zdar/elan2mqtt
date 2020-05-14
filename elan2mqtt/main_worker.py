@@ -46,6 +46,12 @@ async def main():
             logger.info("Getting and publishing status for " + d[mac]['url'])
             resp = await session.get(d[mac]['url'] + '/state', timeout=3)
             logger.debug(resp.status)
+            if resp.status != 200:
+                # There was problem getting status of device from eLan
+                # This is usually caused by expiration of login
+                # Let's try to relogin
+                await login(args.elan_user[0], str(args.elan_password[0]).encode('cp1250'))
+                resp = await session.get(d[mac]['url'] + '/state', timeout=3)
             assert resp.status == 200, "Status retreival from eLan failed!"
             state = await resp.json()
             await c.publish(d[mac]['status_topic'],
@@ -802,7 +808,6 @@ async def main():
     # authentication to eLAN
     # from firmware v 3.0. the password is hashed
     # older firmwares work without authentication
-
     await login(args.elan_user[0],str(args.elan_password[0]).encode('cp1250'))
 
     # Get list of devices

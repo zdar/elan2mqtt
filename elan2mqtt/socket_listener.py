@@ -39,12 +39,52 @@ async def main():
         if mac in d:
             logger.info("Getting and publishing status for " + d[mac]['url'])
             resp = await session.get(d[mac]['url'] + '/state', timeout=3)
+            logger.debug(resp.status)
+            if resp.status != 200:
+                # There was problem getting status of device from eLan
+                # This is usually caused by expiration of login
+                # Let's try to relogin
+                await login(args.elan_user[0], str(args.elan_password[0]).encode('cp1250'))
+                resp = await session.get(d[mac]['url'] + '/state', timeout=3)
+            assert resp.status == 200, "Status retreival from eLan failed!"
             state = await resp.json()
             await c.publish(d[mac]['status_topic'],
                             bytearray(json.dumps(state), 'utf-8'))
             logger.info(
                 "Status published for " + d[mac]['url'] + " " + str(state))
 
+    async def login(name, password):
+        hash = hashlib.sha1(password).hexdigest()
+        credentials = {
+            'name': name,
+            'key': hash
+        }
+
+        logger.info("Get main/login page (to get cookies)")
+        # dirty check if we are authenticated and to get session
+        resp = await session.get(args.elan_url + '/', timeout=3)
+
+        logger.info("Are we already authenticated? E.g. API check")
+        # dirty check if we are authenticated and to get session
+        resp = await session.get(args.elan_url + '/api', timeout=3)
+
+        not_logged = True
+
+        while not_logged:
+            if resp.status != 200:
+                # perfrom login
+                # it should result in new AuthID cookie
+                logger.info("Authenticating to eLAN")
+                resp = await session.post(args.elan_url + '/login', data=credentials)
+
+        # Get list of devices
+        # If we are not athenticated if will raise exception due to json
+        # --> it triggers loop reset with new authenticatin attempt
+            logger.info("Getting eLan device list")
+            resp = await session.get(args.elan_url + '/api/devices', timeout=3)
+            print(resp.text)
+            if resp.status == 200:
+                not_logged = False
 
 
     # setup mqtt (aiomqtt)
@@ -60,39 +100,12 @@ async def main():
     # authentication to eLAN
     # from firmware v 3.0. the password is hashed
     # older firmwares work without authentication
-    hash = hashlib.sha1(str(args.elan_password[0]).encode('cp1250')).hexdigest()
-    credentials = {
-    'name': args.elan_user[0],
-    'key': hash
-    }
-
-    logger.info("Get main/login page (to get cookies)")
-    # dirty check if we are authenticated and to get session
-    resp = await session.get(args.elan_url + '/', timeout=3)
-
-    logger.info("Are we already authenticated? E.g. API check")
-    # dirty check if we are authenticated and to get session
-    resp = await session.get(args.elan_url + '/api', timeout=3)
-
-    not_logged = True
-
-    while not_logged:
-        if resp.status != 200:
-            # perfrom login
-            # it should result in new AuthID cookie
-            logger.info("Authenticating to eLAN")
-            resp = await session.post(args.elan_url + '/login',data=credentials)
-
+    await login(args.elan_user[0], str(args.elan_password[0]).encode('cp1250'))
 
     # Get list of devices
-    # If we are not athenticated if will raise exception due to json
-    # --> it triggers loop reset with new authenticatin attempt
-        logger.info("Getting eLan device list")
-        resp = await session.get(args.elan_url + '/api/devices', timeout=3)
-        print(resp.text)
-        if  resp.status == 200:
-            not_logged = False
-
+    # If we are not athenticated it will raise exception due to json
+    logger.info("Getting eLan device list")
+    resp = await session.get(args.elan_url + '/api/devices', timeout=3)
     device_list = await resp.json()
 
     logger.info("Devices defined in eLan:\n" + str(device_list))
