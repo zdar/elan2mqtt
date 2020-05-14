@@ -50,6 +50,7 @@ async def main():
                 # There was problem getting status of device from eLan
                 # This is usually caused by expiration of login
                 # Let's try to relogin
+                logger.warning("Getting status of device from eLan failed. Trying to relogin and get status.")                
                 await login(args.elan_user[0], str(args.elan_password[0]).encode('cp1250'))
                 resp = await session.get(d[mac]['url'] + '/state', timeout=3)
             assert resp.status == 200, "Status retreival from eLan failed!"
@@ -790,7 +791,7 @@ async def main():
         # --> it triggers loop reset with new authenticatin attempt
             logger.info("Getting eLan device list")
             resp = await session.get(args.elan_url + '/api/devices', timeout=3)
-            print(resp.text)
+            #print(resp.text)
             if  resp.status == 200:
                 not_logged = False
 
