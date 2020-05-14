@@ -16,5 +16,6 @@ pip3 install -r requirements.txt
 
 echo "Starting gateway"
 echo ${ELAN_URL} ${MQTT_SERVER}
-echo ${LOGLEVEL} ${DISABLEAUTODISCOVERY}
+echo "Loglevel:" ${LOGLEVEL} 
+echo "Autodiscovery disabled:" ${DISABLEAUTODISCOVERY}
 python3 main_worker.py ${ELAN_URL} ${MQTT_SERVER} -elan-user ${USERNAME} -elan-password ${PASSWORD} -log-level ${LOGLEVEL} -disable-autodiscovery ${DISABLEAUTODISCOVERY} & python3 socket_listener.py ${ELAN_URL} ${MQTT_SERVER} -elan-user ${USERNAME} -elan-password ${PASSWORD} -log-level ${LOGLEVEL} 
