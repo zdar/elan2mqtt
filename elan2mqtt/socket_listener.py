@@ -30,7 +30,6 @@ import hashlib
 
 logger = logging.getLogger(__name__)
 
-@asyncio.coroutine
 async def main():
     # placehloder for devices data
     d = {}
@@ -136,13 +135,10 @@ async def main():
         #print("Publishing status to topic " + d[mac]['status_topic'])
         await publish_status(mac)
 
-    pass
-
     logger.info("Connecting to websocket to get updates")
     websocket = await session.ws_connect(args.elan_url + '/api/ws', timeout=1)
     logger.info("Socket connected")
 
-    i = 0
     try:
         while True:  # Main loop
             # process status update announcement from eLan
