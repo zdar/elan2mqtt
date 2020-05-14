@@ -223,5 +223,5 @@ if __name__ == '__main__':
             logger.exception(
                 "SOCKET LISTENER: Something went wrong. But don't worry we will start over again."
             )
-            logger.error("But at first take some break. Sleeping for 30 s")
-            time.sleep(30)
+            logger.error("But at first take some break. Sleeping for 10 s")
+            time.sleep(10)

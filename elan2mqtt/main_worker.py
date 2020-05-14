@@ -45,6 +45,8 @@ async def main():
         if mac in d:
             logger.info("Getting and publishing status for " + d[mac]['url'])
             resp = await session.get(d[mac]['url'] + '/state', timeout=3)
+            logger.debug(resp.status)
+            assert resp.status == 200, "Status retreival from eLan failed!"
             state = await resp.json()
             await c.publish(d[mac]['status_topic'],
                             bytearray(json.dumps(state), 'utf-8'))
@@ -989,5 +991,5 @@ if __name__ == '__main__':
             logger.exception(
                 "MAIN WORKER: Something went wrong. But don't worry we will start over again."
             )
-            logger.error("But at first take some break. Sleeping for 30 s")
-            time.sleep(30)
+            logger.error("But at first take some break. Sleeping for 10 s")
+            time.sleep(10)
