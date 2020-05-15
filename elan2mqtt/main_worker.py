@@ -789,6 +789,7 @@ async def main():
         # Get list of devices
         # If we are not athenticated if will raise exception due to json
         # --> it triggers loop reset with new authenticatin attempt
+            time.sleep(1)
             logger.info("Getting eLan device list")
             resp = await session.get(args.elan_url + '/api/devices', timeout=3)
             #print(resp.text)
@@ -867,7 +868,7 @@ async def main():
 
     i = 0
     try:
-        login_interval = 6 * 60 * 60  # interval between logins (to renew session) in s
+        login_interval = 25 * 60  # interval between logins (to renew session) in s (eLan session expires in 0.5 h)
         discovery_interval = 10 * 60  # interval between autodiscovery messages in s
         info_interval = 1 * 60  # interval between periodic status messages
         last_login = time.time()
