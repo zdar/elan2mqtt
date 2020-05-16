@@ -113,8 +113,6 @@ async def main():
 
     logger.info("Devices defined in eLan:\n" + str(device_list))
 
-    mac = None
-
     for device in device_list:
         resp = await session.get(device_list[device]['url'], timeout=3)
         info = await resp.json()
@@ -154,7 +152,7 @@ async def main():
         await publish_status(mac)
 
     logger.info("Connecting to websocket to get updates")
-    websocket = await session.ws_connect(args.elan_url + '/api/ws', timeout=1)
+    websocket = await session.ws_connect(args.elan_url + '/api/ws', timeout=1, autoping=True)
     logger.info("Socket connected")
 
     keep_alive_interval = 1 * 60  # interval between mandatory messages to keep connections open (and to renew session) in s (eLan session expires in 0.5 h)
@@ -169,25 +167,24 @@ async def main():
                     last_keep_alive = time.time()
                     #await login(args.elan_user[0], str(args.elan_password[0]).encode('cp1250'))
                     if mac is not None:
+                        logger.info("Keep alive - status for MAC " + mac)
                         await publish_status(mac)
                 # Waiting for WebSocket eLan message
-                # with async_timeout.timeout(0.1):
-                #    echo = await websocket.recv()
-                    echo = await websocket.receive_json()
-                    if echo is None:
-                        time.sleep(.25)
-                        #print("Empty message?")
-                    else:
-                        #print(echo)
-                        id = echo["device"]
-                        logger.info("Processing state change for " + u[id])
-                        await publish_status(u[id])
+                echo = await websocket.receive_json()
+                if echo is None:
+                    time.sleep(.25)
+                    #print("Empty message?")
+                else:
+                    #print(echo)
+                    id = echo["device"]
+                    logger.info("Processing state change for " + u[id])
+                    await publish_status(u[id])
             except:
                 # It is perfectly normal to reach here - e.g. timeout
                 time.sleep(.1)
                 if not c._connected_state.is_set():
                     raise ClientException("Broker not connected")
-            time.sleep(.05)
+            time.sleep(.1)
 
         logger.error("Should not ever reach here")
         await c.disconnect()
@@ -247,5 +244,5 @@ if __name__ == '__main__':
             logger.exception(
                 "SOCKET LISTENER: Something went wrong. But don't worry we will start over again."
             )
-            logger.error("But at first take some break. Sleeping for 10 s")
-            time.sleep(10)
+            logger.error("But at first take some break. Sleeping for 5 s")
+            time.sleep(5)
