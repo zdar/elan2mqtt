@@ -806,10 +806,6 @@ async def main():
 
     # Connect to eLan and
     cookie_jar = aiohttp.CookieJar(unsafe=True)
-    try:
-        session.clos
-    except:
-        pass
     session = aiohttp.ClientSession(cookie_jar=cookie_jar)
     # authentication to eLAN
     # from firmware v 3.0. the password is hashed
@@ -870,8 +866,8 @@ async def main():
 
     i = 0
     try:
-        login_interval = 25 * 60  # interval between logins (to renew session) in s (eLan session expires in 0.5 h)
-        #discovery_interval = 10 * 60  # interval between autodiscovery messages in s
+        #login_interval = 25 * 60  # interval between logins (to renew session) in s (eLan session expires in 0.5 h)
+        discovery_interval = 10 * 60  # interval between autodiscovery messages in s
         info_interval = 1 * 60  # interval between periodic status messages
         last_login = time.time()
         last_discovery = time.time()
@@ -921,7 +917,7 @@ async def main():
                 # It is perfectly normal to reach here - e.g. timeout
                 pass
                 time.sleep(0.2)
-
+            time.sleep(0.1)
 
         logger.error("MAIN WORKER: Should not ever reach here")
         await c.disconnect()

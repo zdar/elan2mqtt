@@ -180,9 +180,10 @@ async def main():
                         await publish_status(u[id])
             except:
                 # It is perfectly normal to reach here - e.g. timeout
-                time.sleep(.25)
+                time.sleep(.1)
                 if not c._connected_state.is_set():
                     raise ClientException("Broker not connected")
+            time.sleep(.05)
 
         logger.error("Should not ever reach here")
         await c.disconnect()
