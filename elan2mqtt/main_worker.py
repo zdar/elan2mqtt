@@ -806,6 +806,10 @@ async def main():
 
     # Connect to eLan and
     cookie_jar = aiohttp.CookieJar(unsafe=True)
+    try:
+        session.clos
+    except:
+        pass
     session = aiohttp.ClientSession(cookie_jar=cookie_jar)
     # authentication to eLAN
     # from firmware v 3.0. the password is hashed
@@ -864,21 +868,19 @@ async def main():
         #print("Publishing status to topic " + d[mac]['status_topic'])
         await publish_status(mac)
 
-    pass
-
     i = 0
     try:
         login_interval = 25 * 60  # interval between logins (to renew session) in s (eLan session expires in 0.5 h)
-        discovery_interval = 10 * 60  # interval between autodiscovery messages in s
+        #discovery_interval = 10 * 60  # interval between autodiscovery messages in s
         info_interval = 1 * 60  # interval between periodic status messages
         last_login = time.time()
         last_discovery = time.time()
         last_info = time.time()
         while True:  # Main loop
             # every once so often do login
-            if ((time.time() - last_login) > login_interval):
-                last_login = time.time()
-                await login(args.elan_user[0],str(args.elan_password[0]).encode('cp1250'))
+            # if ((time.time() - last_login) > login_interval):
+            #     last_login = time.time()
+            #     await login(args.elan_user[0],str(args.elan_password[0]).encode('cp1250'))
 
             # every once so often publish status (just for sure)
             if ((time.time() - last_info) > info_interval):

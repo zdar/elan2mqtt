@@ -155,7 +155,7 @@ async def main():
     websocket = await session.ws_connect(args.elan_url + '/api/ws', timeout=1)
     logger.info("Socket connected")
 
-    login_interval = 25 * 60  # interval between logins (to renew session) in s (eLan session expires in 0.5 h)
+    #login_interval = 25 * 60  # interval between logins (to renew session) in s (eLan session expires in 0.5 h)
     last_login = time.time()
 
     try:
@@ -163,9 +163,9 @@ async def main():
             # process status update announcement from eLan
             try:
                 # every once so often do login
-                if ((time.time() - last_login) > login_interval):
-                    last_login = time.time()
-                    await login(args.elan_user[0], str(args.elan_password[0]).encode('cp1250'))
+                # if ((time.time() - last_login) > login_interval):
+                #     last_login = time.time()
+                #     await login(args.elan_user[0], str(args.elan_password[0]).encode('cp1250'))
                 # Waiting for WebSocket eLan message
                 # with async_timeout.timeout(0.1):
                 #    echo = await websocket.recv()
