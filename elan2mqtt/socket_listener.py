@@ -113,6 +113,8 @@ async def main():
 
     logger.info("Devices defined in eLan:\n" + str(device_list))
 
+    mac = None
+
     for device in device_list:
         resp = await session.get(device_list[device]['url'], timeout=3)
         info = await resp.json()
@@ -155,17 +157,19 @@ async def main():
     websocket = await session.ws_connect(args.elan_url + '/api/ws', timeout=1)
     logger.info("Socket connected")
 
-    #login_interval = 25 * 60  # interval between logins (to renew session) in s (eLan session expires in 0.5 h)
-    last_login = time.time()
+    keep_alive_interval = 1 * 60  # interval between mandatory messages to keep connections open (and to renew session) in s (eLan session expires in 0.5 h)
+    last_keep_alive = time.time()
 
     try:
         while True:  # Main loop
             # process status update announcement from eLan
             try:
                 # every once so often do login
-                # if ((time.time() - last_login) > login_interval):
-                #     last_login = time.time()
-                #     await login(args.elan_user[0], str(args.elan_password[0]).encode('cp1250'))
+                if ((time.time() - last_keep_alive) > keep_alive_interval):
+                    last_keep_alive = time.time()
+                    #await login(args.elan_user[0], str(args.elan_password[0]).encode('cp1250'))
+                    if mac is not None:
+                        await publish_status(mac)
                 # Waiting for WebSocket eLan message
                 # with async_timeout.timeout(0.1):
                 #    echo = await websocket.recv()
