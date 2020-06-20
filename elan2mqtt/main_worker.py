@@ -26,7 +26,7 @@ import aiohttp
 import asyncio
 import async_timeout
 
-from hbmqtt.client import MQTTClient, ClientException
+import paho.mqtt.client as mqtt
 
 import json
 
@@ -37,9 +37,13 @@ import hashlib
 
 logger = logging.getLogger(__name__)
 
+
+
 async def main():
     # placehloder for devices data
     d = {}
+    # placeholder for message que
+    pending_message = []
     async def publish_status(mac):
         """Publish message to status topic. Topic syntax is: elan / mac / status """
         if mac in d:
@@ -55,7 +59,7 @@ async def main():
                 resp = await session.get(d[mac]['url'] + '/state', timeout=3)
             assert resp.status == 200, "Status retreival from eLan failed!"
             state = await resp.json()
-            await c.publish(d[mac]['status_topic'],
+            mqtt_cli.publish(d[mac]['status_topic'],
                             bytearray(json.dumps(state), 'utf-8'))
             logger.info(
                 "Status published for " + d[mac]['url'] + " " + str(state))
@@ -342,7 +346,7 @@ async def main():
                         'state_value_template':
                         '{%- if value_json.on -%}{"on":true}{%- else -%}{"on":false}{%- endif -%}'
                     }
-                    await c.publish('homeassistant/light/' + mac + '/config',
+                    mqtt_cli.publish('homeassistant/light/' + mac + '/config',
                                     bytearray(json.dumps(discovery), 'utf-8'))
                     logger.info("Discovery published for " + d[mac]['url'])
                     logger.debug(json.dumps(discovery))
@@ -376,7 +380,7 @@ async def main():
                             d[mac]['info']['actions info']['brightness']
                             ['max']) + ') | int }}'
                     }
-                    await c.publish('homeassistant/light/' + mac + '/config',
+                    mqtt_cli.publish('homeassistant/light/' + mac + '/config',
                                     bytearray(json.dumps(discovery), 'utf-8'))
                     logger.info("Discovery published for " + d[mac]['url'])
                     logger.debug(json.dumps(discovery))
@@ -411,7 +415,7 @@ async def main():
                         'value_template':
                         '{%- if value_json.on -%}on{%- else -%}off{%- endif -%}'
                     }
-                    await c.publish('homeassistant/switch/' + mac + '/config',
+                    mqtt_cli.publish('homeassistant/switch/' + mac + '/config',
                                     bytearray(json.dumps(discovery), 'utf-8'))
                     logger.info("Discovery published for " + d[mac]['url'])
                     logger.debug(json.dumps(discovery))
@@ -442,7 +446,7 @@ async def main():
                     'value_template': '{{ value_json["temperature IN"] }}',
                     'unit_of_measurement': '°C'
                 }
-                await c.publish('homeassistant/sensor/' + mac + '/IN/config',
+                mqtt_cli.publish('homeassistant/sensor/' + mac + '/IN/config',
                                 bytearray(json.dumps(discovery), 'utf-8'))
                 logger.info("Discovery published for " + d[mac]['url'])
                 logger.debug(json.dumps(discovery))
@@ -463,7 +467,7 @@ async def main():
                     'value_template': '{{ value_json["temperature OUT"] }}',
                     'unit_of_measurement': '°C'
                 }
-                await c.publish('homeassistant/sensor/' + mac + '/OUT/config',
+                mqtt_cli.publish('homeassistant/sensor/' + mac + '/OUT/config',
                                 bytearray(json.dumps(discovery), 'utf-8'))
 
                 logger.info("Discovery published for " + d[mac]['url'])
@@ -488,7 +492,7 @@ async def main():
                     '{%- if value_json.on -%}on{%- else -%}off{%- endif -%}'
 #                    'command_topic': d[mac]['control_topic']
                 }
-                await c.publish('homeassistant/sensor/' + mac + '/ON/config',
+                mqtt_cli.publish('homeassistant/sensor/' + mac + '/ON/config',
                                 bytearray(json.dumps(discovery), 'utf-8'))
 
                 logger.info("Discovery published for " + d[mac]['url'])
@@ -518,7 +522,7 @@ async def main():
                     'value_template': '{{ value_json["temperature IN"] }}',
                     'unit_of_measurement': '°C'
                 }
-                await c.publish('homeassistant/sensor/' + mac + '/IN/config',
+                mqtt_cli.publish('homeassistant/sensor/' + mac + '/IN/config',
                                 bytearray(json.dumps(discovery), 'utf-8'))
                 logger.info("Discovery published for " + d[mac]['url'])
                 logger.debug(json.dumps(discovery))
@@ -539,7 +543,7 @@ async def main():
                     'value_template': '{{ value_json["temperature OUT"] }}',
                     'unit_of_measurement': '°C'
                 }
-                await c.publish('homeassistant/sensor/' + mac + '/OUT/config',
+                mqtt_cli.publish('homeassistant/sensor/' + mac + '/OUT/config',
                                 bytearray(json.dumps(discovery), 'utf-8'))
 
                 logger.info("Discovery published for " + d[mac]['url'])
@@ -599,7 +603,7 @@ async def main():
                 if (icon != ''):
                     discovery['icon'] = icon
 
-                await c.publish('homeassistant/sensor/' + mac + '/config',
+                mqtt_cli.publish('homeassistant/sensor/' + mac + '/config',
                                 bytearray(json.dumps(discovery), 'utf-8'))
 
                 logger.info("Discovery published for " + d[mac]['url'])
@@ -624,7 +628,7 @@ async def main():
                     '{%- if value_json.battery -%}100{%- else -%}0{%- endif -%}'
 #                    'command_topic': d[mac]['control_topic']
                 }
-                await c.publish('homeassistant/sensor/' + mac + '/battery/config',
+                mqtt_cli.publish('homeassistant/sensor/' + mac + '/battery/config',
                                 bytearray(json.dumps(discovery), 'utf-8'))
 
                 logger.info("Discovery published for " + d[mac]['url'])
@@ -656,7 +660,7 @@ async def main():
                         '{%- if value_json.alarm -%}on{%- else -%}off{%- endif -%}'
     #                    'command_topic': d[mac]['control_topic']
                     }
-                    await c.publish('homeassistant/sensor/' + mac + '/alarm/config',
+                    mqtt_cli.publish('homeassistant/sensor/' + mac + '/alarm/config',
                                     bytearray(json.dumps(discovery), 'utf-8'))
 
                     logger.info("Discovery published for " + d[mac]['url'])
@@ -684,7 +688,7 @@ async def main():
                         '{%- if value_json.tamper == "opened" -%}on{%- else -%}off{%- endif -%}'
     #                    'command_topic': d[mac]['control_topic']
                     }
-                    await c.publish('homeassistant/sensor/' + mac + '/tamper/config',
+                    mqtt_cli.publish('homeassistant/sensor/' + mac + '/tamper/config',
                                     bytearray(json.dumps(discovery), 'utf-8'))
 
                     logger.info("Discovery published for " + d[mac]['url'])
@@ -708,7 +712,7 @@ async def main():
                         '{%- if value_json.automat -%}on{%- else -%}off{%- endif -%}'
     #                    'command_topic': d[mac]['control_topic']
                     }
-                    await c.publish('homeassistant/sensor/' + mac + '/automat/config',
+                    mqtt_cli.publish('homeassistant/sensor/' + mac + '/automat/config',
                                     bytearray(json.dumps(discovery), 'utf-8'))
 
                     logger.info("Discovery published for " + d[mac]['url'])
@@ -732,7 +736,7 @@ async def main():
                         '{%- if value_json.disarm -%}on{%- else -%}off{%- endif -%}'
     #                    'command_topic': d[mac]['control_topic']
                     }
-                    await c.publish('homeassistant/sensor/' + mac + '/disarm/config',
+                    mqtt_cli.publish('homeassistant/sensor/' + mac + '/disarm/config',
                                     bytearray(json.dumps(discovery), 'utf-8'))
 
                     logger.info("Discovery published for " + d[mac]['url'])
@@ -743,7 +747,7 @@ async def main():
 
 
 
-    async def on_message(topic, data):
+    async def process_command(topic, data):
         #print("Got message:", topic, data)
         try:
             tmp = topic.split('/')
@@ -797,11 +801,68 @@ async def main():
                 not_logged = False
 
 
-    # setup mqtt (aiomqtt)
-    c = MQTTClient(config={'auto_reconnect': False})
+
+    def on_connect(client, userdata, flags, rc):
+        if rc == 0:
+            client.connected_flag = True
+            logger.info("Connected to MQTT broker")
+        else:
+            logger.error("Bad connection Returned code = " + str(rc))
+
+    def on_disconnect(client, userdata, rc):
+        logging.info("MQTT broker disconnected. Reason: " + str(rc))
+        mqtt_cli.connected_flag = False
+
+    def on_message(client, userdata, message):
+        logging.info("MQTT broker message. " + str(message.topic))
+        pending_message.append(message)
+
+    # setup mqtt 
+    mqtt.Client.connected_flag = False
+    mqtt_cli = mqtt.Client("eLan2MQTT_main_worker")
     logger.info("Connecting to MQTT broker")
     logger.info(args.mqtt_broker)
-    await c.connect(args.mqtt_broker)
+
+
+    mqtt_broker = args.mqtt_broker
+    i = mqtt_broker.find('mqtt://')
+    if i<0:
+        raise Exception('mqtt URL not provided!')
+
+    # Strip mqtt header from URL
+    mqtt_broker = mqtt_broker[7:]
+
+    i = mqtt_broker.find('@')
+    mqtt_username = ""
+    mqtt_password = ""
+
+    # parse MQTT URL
+    if (i>0):
+        # We have credentials
+        mqtt_username = mqtt_broker[0:i]
+        mqtt_broker = mqtt_broker[i+1:]
+        i = mqtt_username.find(':')
+        if (i>0):
+            # We have passwor too
+            mqtt_password = mqtt_username[i+1:]
+            mqtt_username = mqtt_username[0:i]
+
+    mqtt_cli.username_pw_set(username=mqtt_username, password=mqtt_password)
+    # bind call back functions
+    mqtt_cli.on_connect = on_connect
+    mqtt_cli.on_disconnect = on_disconnect
+    mqtt_cli.on_message = on_message
+    mqtt_cli.connect(mqtt_broker, 1883, 120)
+    mqtt_cli.loop_start()
+
+    # Let's give MQTT some time to connect
+    time.sleep(5)
+
+    # wait for connection
+    if not mqtt_cli.connected_flag:
+        raise Exception('MQTT not connected!')
+
+
     logger.info("Connected to MQTT broker")
 
     # Connect to eLan and
@@ -849,7 +910,7 @@ async def main():
 
         # subscribe to control topic
         logger.info("Subscribing to control topic " + d[mac]['control_topic'])
-        await c.subscribe([(d[mac]['control_topic'], 1)])
+        mqtt_cli.subscribe(d[mac]['control_topic'])
         logger.info("Subscribed to " + d[mac]['control_topic'])
 
         # publish autodiscovery info
@@ -905,26 +966,29 @@ async def main():
             # process incomming MQTT commands
             try:
                 # Waiting for MQTT message
-                message = await c.deliver_message(timeout=0.5)
-                packet = message.publish_packet
-                i = i + 1
-                #print("Processing MQTT message %d:  %s => %s" %
-                #      (i, packet.variable_header.topic_name,
-                #       str(packet.payload.data)))
-                await on_message(packet.variable_header.topic_name,
-                                 packet.payload.data.decode("utf-8"))
-            except asyncio.TimeoutError:
-                # It is perfectly normal to reach here - e.g. timeout
+                while (len(pending_message) > 0):
+                    message_to_process = pending_message.pop(0)
+                    logger.info("Processing command from topic: " + message_to_process.topic)
+                    logger.info(
+                        "Command: " + str(message_to_process.payload.decode("utf-8")))
+                    await process_command(message_to_process.topic, str(message_to_process.payload.decode("utf-8")))
+                    i = i + 1
+                    #print("Processing MQTT message %d:  %s => %s" %
+                    #      (i, packet.variable_header.topic_name,
+                    #       str(packet.payload.data)))
+            except:
+                # Problem with message processin
                 pass
-                time.sleep(0.2)
+
+            # Some sleep at the end of cycle to preven 100 % CPU load       
             time.sleep(0.1)
 
         logger.error("MAIN WORKER: Should not ever reach here")
-        await c.disconnect()
+        await mqtt_cli.disconnect()
     except ClientException as ce:
         logger.error("MAIN WORKER: Client exception: %s" % ce)
         try:
-            await c.disconnect()
+            await mqtt_cli.disconnect()
         except:
             pass
         time.sleep(5)

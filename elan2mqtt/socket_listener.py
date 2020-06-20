@@ -19,7 +19,7 @@ import aiohttp
 import asyncio
 import async_timeout
 
-from hbmqtt.client import MQTTClient, ClientException
+import paho.mqtt.client as mqtt
 
 import json
 
@@ -50,7 +50,7 @@ async def main():
                 resp = await session.get(d[mac]['url'] + '/state', timeout=3)
             assert resp.status == 200, "Status retreival from eLan failed!"
             state = await resp.json()
-            await c.publish(d[mac]['status_topic'],
+            mqtt_cli.publish(d[mac]['status_topic'],
                             bytearray(json.dumps(state), 'utf-8'))
             logger.info(
                 "Status published for " + d[mac]['url'] + " " + str(state))
@@ -89,12 +89,67 @@ async def main():
             if resp.status == 200:
                 not_logged = False
 
+    def on_connect(client, userdata, flags, rc):
+        if rc == 0:
+            client.connected_flag = True
+            logger.info("Connected to MQTT broker")
+        else:
+            logger.error("Bad connection Returned code = " + str(rc))
 
-    # setup mqtt (aiomqtt)
-    c = MQTTClient(config={'auto_reconnect': False})
+    def on_disconnect(client, userdata, rc):
+        logging.info("MQTT broker disconnected. Reason: " + str(rc))
+        mqtt_cli.connected_flag = False
+
+    def on_message(client, userdata, message):
+        global pending_message
+        logging.info("MQTT broker message. " + str(message.topic))
+        pending_message.append(message)
+    
+    
+    # setup mqtt
+    mqtt.Client.connected_flag = False
+    mqtt_cli = mqtt.Client("eLan2MQTT_socket_listener")
     logger.info("Connecting to MQTT broker")
     logger.info(args.mqtt_broker)
-    await c.connect(args.mqtt_broker)
+
+    mqtt_broker = args.mqtt_broker
+    i = mqtt_broker.find('mqtt://')
+    if i < 0:
+        raise Exception('mqtt URL not provided!')
+
+    # Strip mqtt header from URL
+    mqtt_broker = mqtt_broker[7:]
+
+    i = mqtt_broker.find('@')
+    mqtt_username = ""
+    mqtt_password = ""
+
+    # parse MQTT URL
+    if (i > 0):
+        # We have credentials
+        mqtt_username = mqtt_broker[0:i]
+        mqtt_broker = mqtt_broker[i+1:]
+        i = mqtt_username.find(':')
+        if (i > 0):
+            # We have passwor too
+            mqtt_password = mqtt_username[i+1:]
+            mqtt_username = mqtt_username[0:i]
+
+    mqtt_cli.username_pw_set(username=mqtt_username, password=mqtt_password)
+    # bind call back functions
+    mqtt_cli.on_connect = on_connect
+    mqtt_cli.on_disconnect = on_disconnect
+    mqtt_cli.on_message = on_message
+    mqtt_cli.connect(mqtt_broker, 1883, 120)
+    mqtt_cli.loop_start()
+
+    # Let's give MQTT some time to connect
+    time.sleep(5)
+
+    # wait for connection
+    if not mqtt_cli.connected_flag:
+        raise Exception('MQTT not connected!')
+
     logger.info("Connected to MQTT broker")
 
     # Connect to eLan and
@@ -142,10 +197,7 @@ async def main():
         # topic syntax is: elan / mac / command | status
         #
 
-        # subscribe to control topic
-        logger.info("Subscribing to control topic " + d[mac]['control_topic'])
-        await c.subscribe([(d[mac]['control_topic'], 1)])
-        logger.info("Subscribed to " + d[mac]['control_topic'])
+        # We are not subsribed to any command topic
 
         # publish status over mqtt
         #print("Publishing status to topic " + d[mac]['status_topic'])
@@ -182,7 +234,7 @@ async def main():
             except:
                 # It is perfectly normal to reach here - e.g. timeout
                 time.sleep(.1)
-                if not c._connected_state.is_set():
+                if not mqtt_cli.connected_flag:
                     raise ClientException("Broker not connected")
             time.sleep(.1)
 
