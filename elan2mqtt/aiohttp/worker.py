@@ -19,18 +19,17 @@ from .web_log import AccessLogger
 
 try:
     import ssl
-    SSLContext = ssl.SSLContext  # noqa
+
+    SSLContext = ssl.SSLContext
 except ImportError:  # pragma: no cover
-    ssl = None  # type: ignore
-    SSLContext = object  # type: ignore
+    ssl = None  # type: ignore[assignment]
+    SSLContext = object  # type: ignore[misc,assignment]
 
 
-__all__ = ('GunicornWebWorker',
-           'GunicornUVLoopWebWorker',
-           'GunicornTokioWebWorker')
+__all__ = ("GunicornWebWorker", "GunicornUVLoopWebWorker", "GunicornTokioWebWorker")
 
 
-class GunicornWebWorker(base.Worker):
+class GunicornWebWorker(base.Worker):  # type: ignore[misc,no-any-unimported]
 
     DEFAULT_AIOHTTP_LOG_FORMAT = AccessLogger.LOG_FORMAT
     DEFAULT_GUNICORN_LOG_FORMAT = GunicornAccessLogFormat.default
@@ -58,28 +57,39 @@ class GunicornWebWorker(base.Worker):
             self.loop.run_until_complete(self._task)
         except Exception:
             self.log.exception("Exception in gunicorn worker")
-        if sys.version_info >= (3, 6):
-            self.loop.run_until_complete(self.loop.shutdown_asyncgens())
+        self.loop.run_until_complete(self.loop.shutdown_asyncgens())
         self.loop.close()
 
         sys.exit(self.exit_code)
 
     async def _run(self) -> None:
+        runner = None
         if isinstance(self.wsgi, Application):
             app = self.wsgi
         elif asyncio.iscoroutinefunction(self.wsgi):
-            app = await self.wsgi()
+            wsgi = await self.wsgi()
+            if isinstance(wsgi, web.AppRunner):
+                runner = wsgi
+                app = runner.app
+            else:
+                app = wsgi
         else:
-            raise RuntimeError("wsgi app should be either Application or "
-                               "async function returning Application, got {}"
-                               .format(self.wsgi))
-        access_log = self.log.access_log if self.cfg.accesslog else None
-        runner = web.AppRunner(app,
-                               logger=self.log,
-                               keepalive_timeout=self.cfg.keepalive,
-                               access_log=access_log,
-                               access_log_format=self._get_valid_log_format(
-                                   self.cfg.access_log_format))
+            raise RuntimeError(
+                "wsgi app should be either Application or "
+                "async function returning Application, got {}".format(self.wsgi)
+            )
+
+        if runner is None:
+            access_log = self.log.access_log if self.cfg.accesslog else None
+            runner = web.AppRunner(
+                app,
+                logger=self.log,
+                keepalive_timeout=self.cfg.keepalive,
+                access_log=access_log,
+                access_log_format=self._get_valid_log_format(
+                    self.cfg.access_log_format
+                ),
+            )
         await runner.setup()
 
         ctx = self._create_ssl_context(self.cfg) if self.cfg.is_ssl else None
@@ -90,14 +100,17 @@ class GunicornWebWorker(base.Worker):
         assert server is not None
         for sock in self.sockets:
             site = web.SockSite(
-                runner, sock, ssl_context=ctx,
-                shutdown_timeout=self.cfg.graceful_timeout / 100 * 95)
+                runner,
+                sock,
+                ssl_context=ctx,
+                shutdown_timeout=self.cfg.graceful_timeout / 100 * 95,
+            )
             await site.start()
 
         # If our parent changed then we shut down.
         pid = os.getpid()
         try:
-            while self.alive:  # type: ignore
+            while self.alive:  # type: ignore[has-type]
                 self.notify()
 
                 cnt = server.requests_count
@@ -115,7 +128,7 @@ class GunicornWebWorker(base.Worker):
 
         await runner.cleanup()
 
-    def _wait_next_notify(self) -> 'asyncio.Future[bool]':
+    def _wait_next_notify(self) -> "asyncio.Future[bool]":
         self._notify_waiter_done()
 
         loop = self.loop
@@ -125,7 +138,9 @@ class GunicornWebWorker(base.Worker):
 
         return waiter
 
-    def _notify_waiter_done(self, waiter: 'asyncio.Future[bool]'=None) -> None:
+    def _notify_waiter_done(
+        self, waiter: Optional["asyncio.Future[bool]"] = None
+    ) -> None:
         if waiter is None:
             waiter = self._notify_waiter
         if waiter is not None:
@@ -137,28 +152,42 @@ class GunicornWebWorker(base.Worker):
     def init_signals(self) -> None:
         # Set up signals through the event loop API.
 
-        self.loop.add_signal_handler(signal.SIGQUIT, self.handle_quit,
-                                     signal.SIGQUIT, None)
+        self.loop.add_signal_handler(
+            signal.SIGQUIT, self.handle_quit, signal.SIGQUIT, None
+        )
 
-        self.loop.add_signal_handler(signal.SIGTERM, self.handle_exit,
-                                     signal.SIGTERM, None)
+        self.loop.add_signal_handler(
+            signal.SIGTERM, self.handle_exit, signal.SIGTERM, None
+        )
 
-        self.loop.add_signal_handler(signal.SIGINT, self.handle_quit,
-                                     signal.SIGINT, None)
+        self.loop.add_signal_handler(
+            signal.SIGINT, self.handle_quit, signal.SIGINT, None
+        )
 
-        self.loop.add_signal_handler(signal.SIGWINCH, self.handle_winch,
-                                     signal.SIGWINCH, None)
+        self.loop.add_signal_handler(
+            signal.SIGWINCH, self.handle_winch, signal.SIGWINCH, None
+        )
 
-        self.loop.add_signal_handler(signal.SIGUSR1, self.handle_usr1,
-                                     signal.SIGUSR1, None)
+        self.loop.add_signal_handler(
+            signal.SIGUSR1, self.handle_usr1, signal.SIGUSR1, None
+        )
 
-        self.loop.add_signal_handler(signal.SIGABRT, self.handle_abort,
-                                     signal.SIGABRT, None)
+        self.loop.add_signal_handler(
+            signal.SIGABRT, self.handle_abort, signal.SIGABRT, None
+        )
 
         # Don't let SIGTERM and SIGUSR1 disturb active requests
         # by interrupting system calls
         signal.siginterrupt(signal.SIGTERM, False)
         signal.siginterrupt(signal.SIGUSR1, False)
+        # Reset signals so Gunicorn doesn't swallow subprocess return codes
+        # See: https://github.com/aio-libs/aiohttp/issues/6130
+        if sys.version_info < (3, 8):
+            # Starting from Python 3.8,
+            # the default child watcher is ThreadedChildWatcher.
+            # The watcher doesn't depend on SIGCHLD signal,
+            # there is no need to reset it.
+            signal.signal(signal.SIGCHLD, signal.SIG_DFL)
 
     def handle_quit(self, sig: int, frame: FrameType) -> None:
         self.alive = False
@@ -176,13 +205,13 @@ class GunicornWebWorker(base.Worker):
         sys.exit(1)
 
     @staticmethod
-    def _create_ssl_context(cfg: Any) -> 'SSLContext':
-        """ Creates SSLContext instance for usage in asyncio.create_server.
+    def _create_ssl_context(cfg: Any) -> "SSLContext":
+        """Creates SSLContext instance for usage in asyncio.create_server.
 
         See ssl.SSLSocket.__init__ for more details.
         """
         if ssl is None:  # pragma: no cover
-            raise RuntimeError('SSL is not supported.')
+            raise RuntimeError("SSL is not supported.")
 
         ctx = ssl.SSLContext(cfg.ssl_version)
         ctx.load_cert_chain(cfg.certfile, cfg.keyfile)
@@ -196,7 +225,7 @@ class GunicornWebWorker(base.Worker):
     def _get_valid_log_format(self, source_format: str) -> str:
         if source_format == self.DEFAULT_GUNICORN_LOG_FORMAT:
             return self.DEFAULT_AIOHTTP_LOG_FORMAT
-        elif re.search(r'%\([^\)]+\)', source_format):
+        elif re.search(r"%\([^\)]+\)", source_format):
             raise ValueError(
                 "Gunicorn's style options in form of `%(name)s` are not "
                 "supported for the log formatting. Please use aiohttp's "
@@ -209,7 +238,6 @@ class GunicornWebWorker(base.Worker):
 
 
 class GunicornUVLoopWebWorker(GunicornWebWorker):
-
     def init_process(self) -> None:
         import uvloop
 
@@ -226,7 +254,6 @@ class GunicornUVLoopWebWorker(GunicornWebWorker):
 
 
 class GunicornTokioWebWorker(GunicornWebWorker):
-
     def init_process(self) -> None:  # pragma: no cover
         import tokio
 

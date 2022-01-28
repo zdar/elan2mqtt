@@ -819,7 +819,7 @@ async def main():
 
     # setup mqtt 
     mqtt.Client.connected_flag = False
-    mqtt_cli = mqtt.Client("eLan2MQTT_main_worker")
+    mqtt_cli = mqtt.Client("eLan2MQTT_main_worker" + args.mqtt_id)
     logger.info("Connecting to MQTT broker")
     logger.info(args.mqtt_broker)
 
@@ -827,7 +827,7 @@ async def main():
     mqtt_broker = args.mqtt_broker
     i = mqtt_broker.find('mqtt://')
     if i<0:
-        raise Exception('mqtt URL not provided!')
+        raise Exception('MQTT URL not provided!')
 
     # Strip mqtt header from URL
     mqtt_broker = mqtt_broker[7:]
@@ -843,7 +843,7 @@ async def main():
         mqtt_broker = mqtt_broker[i+1:]
         i = mqtt_username.find(':')
         if (i>0):
-            # We have passwor too
+            # We have password
             mqtt_password = mqtt_username[i+1:]
             mqtt_username = mqtt_username[0:i]
 
@@ -1042,6 +1042,13 @@ if __name__ == '__main__':
         default=False,
         type=str2bool,
         help='Disable autodiscovery True|False')
+    parser.add_argument(
+        '-mqtt-id',
+        metavar='mqtt_id',
+        nargs=1,
+        dest='mqtt_id',
+        default='',
+        help='Client ID presented to MQTT server')
        
     args = parser.parse_args()
 

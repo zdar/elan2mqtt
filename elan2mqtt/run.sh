@@ -11,8 +11,8 @@ PASSWORD=$(jq --raw-output ".password" $CONFIG_PATH)
 LOGLEVEL=$(jq --raw-output ".log_level" $CONFIG_PATH)
 DISABLEAUTODISCOVERY=$(jq --raw-output ".disable_autodiscovery" $CONFIG_PATH)
 
-echo "Installing requirements"
-pip3 install -r requirements.txt
+#echo "Installing requirements"
+#pip3 install -r requirements.txt
 
 echo "Starting gateway"
 echo ${ELAN_URL} ${MQTT_SERVER}

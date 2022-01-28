@@ -1,10 +1,9 @@
+from cpython.bytes cimport PyBytes_FromStringAndSize
+from cpython.exc cimport PyErr_NoMemory
+from cpython.mem cimport PyMem_Free, PyMem_Malloc, PyMem_Realloc
+from cpython.object cimport PyObject_Str
 from libc.stdint cimport uint8_t, uint64_t
 from libc.string cimport memcpy
-from cpython.exc cimport PyErr_NoMemory
-from cpython.mem cimport PyMem_Malloc, PyMem_Realloc, PyMem_Free
-
-from cpython.bytes cimport PyBytes_FromStringAndSize
-from cpython.object cimport PyObject_Str
 
 from multidict import istr
 
@@ -112,6 +111,14 @@ cdef str to_str(object s):
         return str(s)
 
 
+cdef void _safe_header(str string) except *:
+    if "\r" in string or "\n" in string:
+        raise ValueError(
+            "Newline or carriage return character detected in HTTP status message or "
+            "header. This is a potential security issue."
+        )
+
+
 def _serialize_headers(str status_line, headers):
     cdef Writer writer
     cdef object key
@@ -119,6 +126,10 @@ def _serialize_headers(str status_line, headers):
     cdef bytes ret
 
     _init_writer(&writer)
+
+    for key, val in headers.items():
+        _safe_header(to_str(key))
+        _safe_header(to_str(val))
 
     try:
         if _write_str(&writer, status_line) < 0:
