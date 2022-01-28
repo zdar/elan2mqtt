@@ -12,7 +12,8 @@
     "username": "admin",
     "password": "elkoep",
     "log_level": "notice",
-    "disable_autodiscovery": "False"
+    "disable_autodiscovery": "false",
+    "mqtt_id": ""
   },
   "schema": {
     "eLanURL": "str",
@@ -20,7 +21,8 @@
     "username": "str",
     "password": "str",
     "log_level": "match(^(trace|debug|info|notice|warning|error|fatal)$)",
-    "disable_autodiscovery": "bool?"
+    "disable_autodiscovery": "bool?",
+    "mqtt_id": "str?"
   },
   "environment": {
     "LOG_FORMAT": "{LEVEL}: {MESSAGE}"
