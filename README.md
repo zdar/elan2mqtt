@@ -17,6 +17,7 @@ Note: all connected devices must be defined on eLan
 - Manual - Copy elan2mqtt directory into Hass addons directory
 - Automatic - Add https://github.com/zdar/elan2mqtt as a new repository and install
 
+Do not forget to enable autodiscovery (uncheck disable_autodiscovery in setup)
 
 # Standalone
 Use python to run main_worker.py and socket_listener.py (check command line arguments)
@@ -41,9 +42,12 @@ _(*) these can be captured using google web browser. Open developer tools (F12),
 # Currently tested devices
 Device | eLan type | Home Assitant
 ---|---|---
-RFSA-66M | light | MQTT template light
+RFSA-6xM | light or switch | MQTT template light
+RFSA-11B | light or switch | MQTT template light
+RFSA-62B | light or switch | MQTT template light
 RFDA-11B | dimmed light | MQTT template dimmer light
 RFSTI-11G | heating | MQTT template sensors: 2x temperature (-IN,-OUT), heating swithed on (-ON) 
+RFxD-100 | detector | MQTT templae detector
 
 All devices marked in eLan as:
 - **lights** are reported to HA as light (controllable)
