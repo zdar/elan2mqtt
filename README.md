@@ -1,6 +1,8 @@
 # Anouncement
 This project is looking for a new home/mantainer. If you are interested please send a PM.
 
+In meantime you can try to use https://github.com/lordrak007/haas-addon-repo
+
 # elan2mqtt
 MQTT gateway for ElkoEP iNELS RF system https://www.elkoep.com/wireless-rf-control
 
